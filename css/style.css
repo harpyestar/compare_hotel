@@ -1,0 +1,407 @@
+body {
+            font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8f9fa;
+            position: relative;
+        }
+        .guide-button {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            width: 60px;
+            height: 70px;
+            background: #ffd700;
+            border-radius: 50% 50% 25% 25%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        /* 灯泡底座 */
+        .guide-button::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 15px;
+            background: #666;
+            border-radius: 0 0 5px 5px;
+        }
+        /* 光芒效果 */
+        .guide-button::before {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            top: -10px;
+            left: -10px;
+            background: rgba(255, 215, 0, 0.3);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.2;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+        }
+        .guide-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.6);
+        }
+        .guide-button img {
+            width: 30px;
+            height: 30px;
+        }
+        .guide-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            display: none;
+        }
+        .guide-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            max-width: 500px;
+            width: 90%;
+            display: none;
+        }
+        .guide-modal h3 {
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+        .guide-modal p {
+            margin-bottom: 30px;
+        }
+        .guide-modal .btn-group {
+            display: flex;
+            justify-content: space-between;
+        }
+        .guide-highlight {
+            position: fixed;
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            z-index: 998;
+            display: none;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 0 100px;
+            text-align: center;
+        }
+        .header .w-75 {
+            background: transparent;
+        }
+        .header .row {
+            background: transparent;
+        }
+        .header .col-md-3 {
+            background: transparent;
+        }
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .header p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+        .search-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-top: -50px;
+            position: relative;
+            z-index: 10;
+        }
+        .search-container input.form-control {
+            background: white;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 0.375rem 0.75rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        /* 搜索栏样式 */
+        .search-bar {
+            min-height: 60px;
+        }
+        .search-item {
+            position: relative;
+        }
+        .search-item input.form-control {
+            outline: none;
+            box-shadow: none;
+        }
+        .search-item button.form-control {
+            outline: none;
+            box-shadow: none;
+            text-align: left;
+        }
+        .search-item .btn-primary {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .border-right {
+            border-right: 1px solid #e0e0e0;
+        }
+        .search-container input.form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        /* 搜索联想结果样式 */
+        #suggestions {
+            max-height: 240px; /* 6个结果的高度 */
+            overflow-y: scroll;
+            z-index: 1000;
+        }
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .suggestion-item:hover {
+            background-color: #f8f9fa;
+        }
+        .suggestion-item:first-child {
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+        .suggestion-item:last-child {
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+        .search-guide {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .guide-item {
+            display: inline-block;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 20px;
+            padding: 5px 15px;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .guide-item:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .platforms {
+            padding: 60px 0;
+            background: white;
+        }
+        .platforms h2 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-weight: 600;
+        }
+        .platform-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+        .platform-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .platform-card img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+        .hotels {
+            padding: 60px 0;
+        }
+        .hotels h2 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-weight: 600;
+        }
+        .hotel-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+        .hotel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .hotel-image {
+            height: 200px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .hotel-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .hotel-rating {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ff6b6b;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .compare-checkbox {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 10;
+        }
+        .hotel-info {
+            padding: 20px;
+        }
+        .hotel-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .hotel-address {
+            color: #6c757d;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        .hotel-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+        .hotel-price span {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: #6c757d;
+        }
+        .footer {
+            background: #343a40;
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+        .compare-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #ff6b6b;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        .compare-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.6);
+        }
+        .compare-btn.disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .compare-btn.disabled:hover {
+            transform: none;
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+        .user-info {
+            display: none;
+        }
+        .user-info .btn {
+            margin-left: 10px;
+        }
+        .user-info #usernameDisplay {
+            font-weight: 600;
+        }
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            .search-container {
+                padding: 20px;
+            }
+            .header .d-flex {
+                flex-direction: column;
+                align-items: center;
+            }
+            .header .d-flex > div {
+                margin-bottom: 15px;
+            }
+            .user-auth, .user-info {
+                width: 100%;
+                text-align: center;
+            }
+            .user-info .d-flex {
+                justify-content: center;
+            }
+        }
+        /* 人数与客房数样式 */
+        #guestsBtn {
+            text-align: left;
+        }
+        #guestsBtn i {
+            font-size: 0.8rem;
+        }
+        #adultMinus, #adultPlus, #childMinus, #childPlus, #roomMinus, #roomPlus {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+        }
+        #adultCount, #childCount, #roomCount {
+            width: 64px;
+        }
+        .text-sm {
+            font-size: 0.875rem;
+        }
+        #resetGuests {
+            margin-right: 10px;
+        }
