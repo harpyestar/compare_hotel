@@ -1,0 +1,169 @@
+<!-- 登录模态框 -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="loginModalLabel">用户登录</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="loginUsername" class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="loginUsername" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label">密码</label>
+                        <input type="password" class="form-control" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">登录</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 注册模态框 -->
+<div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registerModalLabel">用户注册</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="registerForm">
+                    <div class="mb-3">
+                        <label for="registerUsername" class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="registerUsername" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="registerPassword" class="form-label">密码</label>
+                        <input type="password" class="form-control" id="registerPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="registerConfirmPassword" class="form-label">确认密码</label>
+                        <input type="password" class="form-control" id="registerConfirmPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">注册</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 搜索历史模态框 -->
+<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="historyModalLabel">搜索历史</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="historyList" class="list-group">
+                    <!-- 搜索历史项将在这里动态添加 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 收藏酒店模态框 -->
+<div class="modal fade" id="favoritesModal" tabindex="-1" aria-labelledby="favoritesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="favoritesModalLabel">我的收藏</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="favoritesList" class="row">
+                    <!-- 收藏的酒店将在这里动态添加 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 人数与客房数模态框 -->
+<div class="modal fade" id="guestsModal" tabindex="-1" aria-labelledby="guestsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="guestsModalLabel">人数与客房数目</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>成人</span>
+                        <div class="d-flex align-items-center">
+                            <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="adultMinus">-</button>
+                            <input type="number" class="form-control w-16 text-center mx-2" id="adultCount" value="2" min="1" max="10">
+                            <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="adultPlus">+</button>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>儿童</span>
+                        <div class="d-flex align-items-center">
+                            <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="childMinus">-</button>
+                            <input type="number" class="form-control w-16 text-center mx-2" id="childCount" value="0" min="0" max="10">
+                            <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="childPlus">+</button>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span>客房</span>
+                        <div class="d-flex align-items-center">
+                            <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="roomMinus">-</button>
+                            <input type="number" class="form-control w-16 text-center mx-2" id="roomCount" value="1" min="1" max="10">
+                            <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="roomPlus">+</button>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span>可携带宠物</span>
+                            <p class="text-sm text-muted">显示欢迎宠物入住的住宿</p>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="petsAllowed">
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" id="resetGuests">重设</button>
+                    <button type="button" class="btn btn-primary" id="applyGuests">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 日期选择模态框 -->
+<div class="modal fade" id="dateModal" tabindex="-1" aria-labelledby="dateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dateModalLabel">选择入住和离店日期</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <div class="mb-3">
+                        <label for="check-in" class="form-label">入住日期</label>
+                        <input type="date" class="form-control" id="check-in">
+                    </div>
+                    <div class="mb-4">
+                        <label for="check-out" class="form-label">离店日期</label>
+                        <input type="date" class="form-control" id="check-out">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" id="resetDate">重设</button>
+                    <button type="button" class="btn btn-primary" id="applyDate">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

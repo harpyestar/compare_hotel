@@ -1,0 +1,77 @@
+<!-- 创意灯泡向导按钮 -->
+<div class="guide-button" id="guideButton">
+    <i class="fas fa-lightbulb text-2xl"></i>
+</div>
+
+<!-- 向导遮罩层 -->
+<div class="guide-overlay" id="guideOverlay"></div>
+
+<!-- 向导弹窗 -->
+<div class="guide-modal" id="guideModal">
+    <h3>欢迎使用酒店比价平台</h3>
+    <p id="guideContent">这是一个简单的向导，将帮助您了解如何使用我们的平台。</p>
+    <div class="btn-group">
+        <button class="btn btn-secondary" id="guideClose">关闭</button>
+        <button class="btn btn-outline-primary" id="guidePrev">上一步</button>
+        <button class="btn btn-primary" id="guideNext">下一步</button>
+    </div>
+</div>
+
+<!-- 向导高亮区域 -->
+<div class="guide-highlight" id="guideHighlight"></div>
+
+<!-- 头部区域 -->
+<div class="header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1>干就完了</h1>
+                <p>国内酒店比价平台，为您找到最优惠的价格</p>
+            </div>
+            <div class="user-auth" id="loginRegister">
+                <button class="btn btn-outline-light me-2" id="loginBtn">登录</button>
+                <button class="btn btn-light" id="registerBtn">注册</button>
+            </div>
+            <div class="user-info" id="userInfo" style="display: none;">
+                <div class="d-flex align-items-center">
+                    <span class="text-white me-3" id="usernameDisplay"></span>
+                    <button class="btn btn-outline-light me-2" id="historyBtn">搜索历史</button>
+                    <button class="btn btn-outline-light me-2" id="favoritesBtn">我的收藏</button>
+                    <button class="btn btn-light" id="logoutBtn">退出登录</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 向导流程指示器 -->
+        <div class="d-flex justify-content-center mt-5">
+            <div class="w-75">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="bg-white/30 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-search text-xl"></i>
+                        </div>
+                        <p class="text-white">1. 选择目的地</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="bg-white/30 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-calendar-alt text-xl"></i>
+                        </div>
+                        <p class="text-white">2. 选择日期</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="bg-white/30 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-hotel text-xl"></i>
+                        </div>
+                        <p class="text-white">3. 浏览酒店</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="bg-white/30 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-balance-scale text-xl"></i>
+                        </div>
+                        <p class="text-white">4. 比较价格</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

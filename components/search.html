@@ -1,0 +1,55 @@
+<div class="container">
+    <div class="search-container">
+        <form>
+            <div class="search-bar bg-white rounded-full shadow-lg p-2 mb-4">
+                <div class="d-flex align-items-center">
+                    <div class="search-item flex-grow-1 border-right pr-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-map-marker-alt text-gray-500 mr-2"></i>
+                            <input type="text" class="form-control border-0" id="destination" placeholder="输入城市或酒店名称">
+                        </div>
+                        <div id="suggestions" class="position-absolute w-100 bg-white border border-gray-200 rounded shadow-lg z-10" style="display: none;"></div>
+                    </div>
+                    <div class="search-item flex-grow-1 border-right pr-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-calendar text-gray-500 mr-2"></i>
+                            <div class="position-relative">
+                                <button type="button" class="form-control border-0 d-flex justify-content-between align-items-center" id="dateBtn">
+                                    <span id="dateDisplay">选择日期</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="search-item flex-grow-1 border-right pr-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-user-friends text-gray-500 mr-2"></i>
+                            <button type="button" class="form-control border-0 d-flex justify-content-between align-items-center" id="guestsBtn">
+                                <span id="guestsDisplay">2位旅客, 1间客房</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="search-item">
+                        <button type="submit" class="btn btn-primary rounded-full" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 搜索栏向导 -->
+            <div class="search-guide">
+                <h5>热门目的地</h5>
+                <div class="guide-items">
+                    <span class="guide-item">北京</span>
+                    <span class="guide-item">上海</span>
+                    <span class="guide-item">广州</span>
+                    <span class="guide-item">深圳</span>
+                    <span class="guide-item">杭州</span>
+                    <span class="guide-item">成都</span>
+                    <span class="guide-item">重庆</span>
+                    <span class="guide-item">三亚</span>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

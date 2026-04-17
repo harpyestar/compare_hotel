@@ -1,0 +1,64 @@
+/* 头部样式 */
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 60px 0 100px;
+    text-align: center;
+}
+
+.header .w-75 {
+    background: transparent;
+}
+
+.header .row {
+    background: transparent;
+}
+
+.header .col-md-3 {
+    background: transparent;
+}
+
+.header .col-md-3 div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.header p {
+    font-size: 1.2rem;
+    margin-bottom: 40px;
+}
+
+/* 头部图标样式 */
+.header .bg-white\/30 {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.header .text-xl {
+    font-size: 1.25rem;
+}
+
+/* 响应式头部样式 */
+@media (max-width: 768px) {
+    .header {
+        padding: 40px 0 80px;
+    }
+    
+    .header h1 {
+        font-size: 2.5rem;
+    }
+    
+    .header p {
+        font-size: 1rem;
+    }
+    
+    .header .col-md-3 {
+        margin-bottom: 20px;
+    }
+}

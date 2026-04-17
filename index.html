@@ -6,143 +6,22 @@
     <title>干就完了 - 酒店比价平台</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components/header.css">
+    <link rel="stylesheet" href="css/components/search.css">
+    <link rel="stylesheet" href="css/components/hotel.css">
+    <link rel="stylesheet" href="css/components/modal.css">
+    <link rel="stylesheet" href="css/components/guide.css">
+    <link rel="stylesheet" href="css/components/footer.css">
 </head>
 <body>
-    <!-- 创意灯泡向导按钮 -->
-    <div class="guide-button" id="guideButton">
-        <i class="fas fa-lightbulb text-2xl"></i>
-    </div>
-    
-    <!-- 向导遮罩层 -->
-    <div class="guide-overlay" id="guideOverlay"></div>
-    
-    <!-- 向导弹窗 -->
-    <div class="guide-modal" id="guideModal">
-        <h3>欢迎使用酒店比价平台</h3>
-        <p id="guideContent">这是一个简单的向导，将帮助您了解如何使用我们的平台。</p>
-        <div class="btn-group">
-            <button class="btn btn-secondary" id="guideClose">关闭</button>
-            <button class="btn btn-outline-primary" id="guidePrev">上一步</button>
-            <button class="btn btn-primary" id="guideNext">下一步</button>
-        </div>
-    </div>
-    
-    <!-- 向导高亮区域 -->
-    <div class="guide-highlight" id="guideHighlight"></div>
+
     
     <!-- 头部区域 -->
-    <div class="header">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1>干就完了</h1>
-                    <p>国内酒店比价平台，为您找到最优惠的价格</p>
-                </div>
-                <div class="user-auth">
-                    <button class="btn btn-outline-light me-2" id="loginBtn">登录</button>
-                    <button class="btn btn-light" id="registerBtn">注册</button>
-                </div>
-                <div class="user-info" id="userInfo" style="display: none;">
-                    <div class="d-flex align-items-center">
-                        <span class="text-white me-3" id="usernameDisplay"></span>
-                        <button class="btn btn-outline-light me-2" id="historyBtn">搜索历史</button>
-                        <button class="btn btn-outline-light me-2" id="favoritesBtn">我的收藏</button>
-                        <button class="btn btn-light" id="logoutBtn">退出登录</button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 向导流程指示器 -->
-            <div class="d-flex justify-content-center mt-5">
-                <div class="w-75">
-                    <div class="row">
-                        <div class="col-md-3 text-center">
-                            <div class="bg-white/30 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
-                                <i class="fas fa-search text-xl"></i>
-                            </div>
-                            <p class="text-white">1. 选择目的地</p>
-                        </div>
-                        <div class="col-md-3 text-center">
-                            <div class="bg-white/30 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
-                                <i class="fas fa-calendar-alt text-xl"></i>
-                            </div>
-                            <p class="text-white">2. 选择日期</p>
-                        </div>
-                        <div class="col-md-3 text-center">
-                            <div class="bg-white/30 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
-                                <i class="fas fa-hotel text-xl"></i>
-                            </div>
-                            <p class="text-white">3. 浏览酒店</p>
-                        </div>
-                        <div class="col-md-3 text-center">
-                            <div class="bg-white/30 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
-                                <i class="fas fa-balance-scale text-xl"></i>
-                            </div>
-                            <p class="text-white">4. 比较价格</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div id="header"></div>
 
     <!-- 搜索框区域 -->
-    <div class="container">
-        <div class="search-container">
-            <form>
-                <div class="search-bar bg-white rounded-full shadow-lg p-2 mb-4">
-                    <div class="d-flex align-items-center">
-                        <div class="search-item flex-grow-1 border-right pr-4">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-map-marker-alt text-gray-500 mr-2"></i>
-                                <input type="text" class="form-control border-0" id="destination" placeholder="输入城市或酒店名称">
-                                <div id="suggestions" class="position-absolute w-100 bg-white border border-gray-200 rounded shadow-lg z-10" style="display: none;"></div>
-                            </div>
-                        </div>
-                        <div class="search-item flex-grow-1 border-right pr-4">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-calendar text-gray-500 mr-2"></i>
-                                <div class="position-relative">
-                                    <button type="button" class="form-control border-0 d-flex justify-content-between align-items-center" id="dateBtn">
-                                        <span id="dateDisplay">选择日期</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="search-item flex-grow-1 border-right pr-4">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-user-friends text-gray-500 mr-2"></i>
-                                <button type="button" class="form-control border-0 d-flex justify-content-between align-items-center" id="guestsBtn">
-                                    <span id="guestsDisplay">2位旅客, 1间客房</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="search-item">
-                            <button type="submit" class="btn btn-primary rounded-full" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 搜索栏向导 -->
-                <div class="search-guide">
-                    <h5>热门目的地</h5>
-                    <div class="guide-items">
-                        <span class="guide-item">北京</span>
-                        <span class="guide-item">上海</span>
-                        <span class="guide-item">广州</span>
-                        <span class="guide-item">深圳</span>
-                        <span class="guide-item">杭州</span>
-                        <span class="guide-item">成都</span>
-                        <span class="guide-item">重庆</span>
-                        <span class="guide-item">三亚</span>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+    <div id="search"></div>
 
     <!-- 参考平台区域 -->
     <div class="platforms">
@@ -150,26 +29,26 @@
             <h2>合作平台</h2>
             <div class="row">
                 <div class="col-md-3">
-                    <div class="platform-card">
-                        <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20booking%20platform%20logo%2C%20clean%20modern%20design%2C%20blue%20color%20scheme&image_size=square" alt="携程">
+                    <div class="platform-card d-flex flex-column align-items-center">
+                        <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20booking%20platform%20logo%2C%20clean%20modern%20design%2C%20blue%20color%20scheme&image_size=square" alt="携程" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
                         <h4>携程</h4>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="platform-card">
-                        <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20booking%20platform%20logo%2C%20clean%20modern%20design%2C%20red%20color%20scheme&image_size=square" alt="美团">
+                    <div class="platform-card d-flex flex-column align-items-center">
+                        <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20booking%20platform%20logo%2C%20clean%20modern%20design%2C%20red%20color%20scheme&image_size=square" alt="美团" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
                         <h4>美团</h4>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="platform-card">
-                        <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20booking%20platform%20logo%2C%20clean%20modern%20design%2C%20green%20color%20scheme&image_size=square" alt="飞猪">
+                    <div class="platform-card d-flex flex-column align-items-center">
+                        <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20booking%20platform%20logo%2C%20clean%20modern%20design%2C%20green%20color%20scheme&image_size=square" alt="飞猪" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
                         <h4>飞猪</h4>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="platform-card">
-                        <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20booking%20platform%20logo%2C%20clean%20modern%20design%2C%20purple%20color%20scheme&image_size=square" alt="艺龙">
+                    <div class="platform-card d-flex flex-column align-items-center">
+                        <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20booking%20platform%20logo%2C%20clean%20modern%20design%2C%20purple%20color%20scheme&image_size=square" alt="艺龙" style="width: 150px; height: 150px; max-width: 150px; max-height: 150px;">
                         <h4>艺龙</h4>
                     </div>
                 </div>
@@ -346,186 +225,13 @@
         <i class="fas fa-balance-scale mr-2"></i> 比较酒店 (0)
     </div>
 
-    <!-- 登录模态框 -->
-    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="loginModalLabel">用户登录</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="loginForm">
-                        <div class="mb-3">
-                            <label for="loginUsername" class="form-label">用户名</label>
-                            <input type="text" class="form-control" id="loginUsername" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="loginPassword" class="form-label">密码</label>
-                            <input type="password" class="form-control" id="loginPassword" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">登录</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 注册模态框 -->
-    <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="registerModalLabel">用户注册</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="registerForm">
-                        <div class="mb-3">
-                            <label for="registerUsername" class="form-label">用户名</label>
-                            <input type="text" class="form-control" id="registerUsername" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="registerPassword" class="form-label">密码</label>
-                            <input type="password" class="form-control" id="registerPassword" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="registerConfirmPassword" class="form-label">确认密码</label>
-                            <input type="password" class="form-control" id="registerConfirmPassword" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">注册</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-    <!-- 搜索历史模态框 -->
-    <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="historyModalLabel">搜索历史</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="historyList" class="list-group">
-                        <!-- 搜索历史项将在这里动态添加 -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 收藏酒店模态框 -->
-    <div class="modal fade" id="favoritesModal" tabindex="-1" aria-labelledby="favoritesModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="favoritesModalLabel">我的收藏</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="favoritesList" class="row">
-                        <!-- 收藏的酒店将在这里动态添加 -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 人数与客房数模态框 -->
-    <div class="modal fade" id="guestsModal" tabindex="-1" aria-labelledby="guestsModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="guestsModalLabel">人数与客房数目</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>成人</span>
-                            <div class="d-flex align-items-center">
-                                <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="adultMinus">-</button>
-                                <input type="number" class="form-control w-16 text-center mx-2" id="adultCount" value="2" min="1" max="10">
-                                <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="adultPlus">+</button>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>儿童</span>
-                            <div class="d-flex align-items-center">
-                                <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="childMinus">-</button>
-                                <input type="number" class="form-control w-16 text-center mx-2" id="childCount" value="0" min="0" max="10">
-                                <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="childPlus">+</button>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <span>客房</span>
-                            <div class="d-flex align-items-center">
-                                <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="roomMinus">-</button>
-                                <input type="number" class="form-control w-16 text-center mx-2" id="roomCount" value="1" min="1" max="10">
-                                <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="roomPlus">+</button>
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <span>可携带宠物</span>
-                                <p class="text-sm text-muted">显示欢迎宠物入住的住宿</p>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="petsAllowed">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-outline-secondary" id="resetGuests">重设</button>
-                        <button type="button" class="btn btn-primary" id="applyGuests">确定</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 日期选择模态框 -->
-    <div class="modal fade" id="dateModal" tabindex="-1" aria-labelledby="dateModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="dateModalLabel">选择入住和离店日期</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-4">
-                        <div class="mb-3">
-                            <label for="check-in" class="form-label">入住日期</label>
-                            <input type="date" class="form-control" id="check-in">
-                        </div>
-                        <div class="mb-4">
-                            <label for="check-out" class="form-label">离店日期</label>
-                            <input type="date" class="form-control" id="check-out">
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-outline-secondary" id="resetDate">重设</button>
-                        <button type="button" class="btn btn-primary" id="applyDate">确定</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- 模态框 -->
+    <div id="modals"></div>
 
     <!-- 页脚 -->
-    <div class="footer">
-        <div class="container">
-            <p>&copy; 2026 干就完了 - 酒店比价平台. 保留所有权利.</p>
-        </div>
-    </div>
+    <div id="footer"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/script.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
