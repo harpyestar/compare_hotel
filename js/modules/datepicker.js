@@ -96,10 +96,11 @@ const datepickerModule = {
 
         container.appendChild(buttonContainer);
 
+        const selectedDates = this.getSelectedDates();
         const options = {
             mode: 'range',
             dateFormat: 'Y-m-d',
-            defaultDate: null,
+            defaultDate: selectedDates.checkIn && selectedDates.checkOut ? [selectedDates.checkIn, selectedDates.checkOut] : null,
             showMonths: 2,
             inline: true,
             monthSelectorType: 'static',
@@ -165,12 +166,35 @@ const datepickerModule = {
 
     getSelectedDates() {
         const dateDisplay = document.getElementById('dateDisplay');
-        if (!dateDisplay) return { checkIn: '', checkOut: '' };
+        if (!dateDisplay) return { checkIn: null, checkOut: null };
         const text = dateDisplay.textContent;
         if (text === '选择日期' || !text.includes(' - ')) {
-            return { checkIn: '', checkOut: '' };
+            return { checkIn: null, checkOut: null };
         }
-        return { checkIn: '', checkOut: '' };
+        
+        // 解析日期字符串
+        const parts = text.split(' - ');
+        if (parts.length !== 2) return { checkIn: null, checkOut: null };
+        
+        const parseDate = (dateStr) => {
+            const match = dateStr.match(/(\d+)月(\d+)日/);
+            if (!match) return null;
+            const month = parseInt(match[1]) - 1;
+            const day = parseInt(match[2]);
+            const date = new Date();
+            date.setMonth(month);
+            date.setDate(day);
+            // 处理月份跨年的情况
+            if (month < date.getMonth()) {
+                date.setFullYear(date.getFullYear() + 1);
+            }
+            return date;
+        };
+        
+        const checkIn = parseDate(parts[0]);
+        const checkOut = parseDate(parts[1]);
+        
+        return { checkIn, checkOut };
     }
 };
 
