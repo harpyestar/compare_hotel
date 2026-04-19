@@ -16,6 +16,57 @@ const datepickerModule = {
 
     init() {
         this.setupDatePicker();
+        this.initLanguageChange();
+    },
+    
+    // 初始化语言切换监听
+    initLanguageChange() {
+        // 检查是否有i18next实例
+        if (typeof i18next !== 'undefined') {
+            // 监听语言变化事件
+            i18next.on('languageChanged', () => {
+                this.updateDisplayText();
+            });
+        }
+    },
+    
+    // 更新显示文本，支持语言切换
+    updateDisplayText() {
+        const dateDisplay = document.getElementById('dateDisplay');
+        if (!dateDisplay) return;
+        
+        // 检查是否有i18next实例
+        const isEnglish = typeof i18next !== 'undefined' && (i18next.language === 'en' || i18next.language === 'en-US' || i18next.language === 'en-GB');
+        
+        // 只有当日期显示的是默认文本时才更新
+        const defaultChineseText = '选择日期';
+        const defaultEnglishText = 'Select dates';
+        
+        if (dateDisplay.textContent === defaultChineseText) {
+            dateDisplay.textContent = isEnglish ? defaultEnglishText : defaultChineseText;
+        } else if (dateDisplay.textContent === defaultEnglishText) {
+            dateDisplay.textContent = isEnglish ? defaultEnglishText : defaultChineseText;
+        } else if (dateDisplay.textContent.includes(' - ')) {
+            // 如果用户已经选择了日期，根据当前语言重新格式化
+            const selectedDates = this.getSelectedDates();
+            if (selectedDates.checkIn && selectedDates.checkOut) {
+                const checkIn = selectedDates.checkIn;
+                const checkOut = selectedDates.checkOut;
+                
+                let checkInStr, checkOutStr;
+                if (isEnglish) {
+                    // 英文格式: 4/8
+                    checkInStr = `${checkIn.getMonth() + 1}/${checkIn.getDate()}`;
+                    checkOutStr = `${checkOut.getMonth() + 1}/${checkOut.getDate()}`;
+                } else {
+                    // 中文格式: 4月8日
+                    checkInStr = `${checkIn.getMonth() + 1}月${checkIn.getDate()}日`;
+                    checkOutStr = `${checkOut.getMonth() + 1}月${checkOut.getDate()}日`;
+                }
+                
+                dateDisplay.textContent = `${checkInStr} - ${checkOutStr}`;
+            }
+        }
     },
 
     setupDatePicker() {

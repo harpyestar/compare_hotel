@@ -77,6 +77,8 @@ document.addEventListener('DOMContentLoaded', function() {
             updatePageText();
             // 初始更新人数与客房数显示文本
             guestsModule.updateDisplayText();
+            // 初始更新日期选择显示文本
+            datepickerModule.updateDisplayText();
         }, 100);
     });
 });
@@ -356,4 +358,6 @@ i18next.on('languageChanged', function(lng) {
     updatePageText();
     // 更新人数与客房数显示文本
     guestsModule.updateDisplayText();
+    // 更新日期选择显示文本
+    datepickerModule.updateDisplayText();
 });
