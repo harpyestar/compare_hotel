@@ -140,6 +140,19 @@ const datepickerModule = {
         checkOut.setDate(checkOut.getDate() + 1);
 
         this.flatpickrInstance.setDate([checkIn, checkOut], true);
+        
+        // 直接完成选择并关闭日历
+        const dateDisplay = document.getElementById('dateDisplay');
+        const checkInStr = `${checkIn.getMonth() + 1}月${checkIn.getDate()}日`;
+        const checkOutStr = `${checkOut.getMonth() + 1}月${checkOut.getDate()}日`;
+        dateDisplay.textContent = `${checkInStr} - ${checkOutStr}`;
+        
+        // 关闭日历
+        const container = document.getElementById('datePickerContainer');
+        if (container && container.parentNode) {
+            container.parentNode.removeChild(container);
+        }
+        this.flatpickrInstance = null;
     },
 
     getDaysUntilWeekend() {
