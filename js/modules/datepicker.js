@@ -39,22 +39,72 @@ const datepickerModule = {
         }
 
         const rect = dateBtn.getBoundingClientRect();
-        const container = document.getElementById('datePickerContainer') || document.createElement('div');
-        if (!container.id) {
-            container.id = 'datePickerContainer';
-            container.style.position = 'fixed';
-            container.style.top = `${rect.bottom + 10}px`;
-            container.style.left = `${rect.left}px`;
-            container.style.zIndex = '10001';
-            document.body.appendChild(container);
-        }
+        const container = document.createElement('div');
+        container.id = 'datePickerContainer';
+        container.style.position = 'fixed';
+        container.style.top = `${rect.bottom + 10}px`;
+        container.style.left = `${rect.left}px`;
+        container.style.zIndex = '10001';
+        container.style.backgroundColor = 'white';
+        container.style.border = '1px solid #e5e5e5';
+        container.style.borderRadius = '8px';
+        container.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+        container.style.padding = '16px';
+        container.style.minWidth = '400px';
+        document.body.appendChild(container);
+
+        const calendarContainer = document.createElement('div');
+        calendarContainer.id = 'calendarContainer';
+        container.appendChild(calendarContainer);
+
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'space-between';
+        buttonContainer.style.marginTop = '16px';
+        buttonContainer.style.paddingTop = '16px';
+        buttonContainer.style.borderTop = '1px solid #e5e5e5';
+
+        const quickButtons = [
+            { text: '今晚', days: 0 },
+            { text: '明晚', days: 1 },
+            { text: '本周末', days: this.getDaysUntilWeekend() },
+            { text: '下周末', days: this.getDaysUntilWeekend() + 7 }
+        ];
+
+        quickButtons.forEach(btn => {
+            const button = document.createElement('button');
+            button.textContent = btn.text;
+            button.style.padding = '6px 12px';
+            button.style.border = '1px solid #e5e5e5';
+            button.style.borderRadius = '4px';
+            button.style.backgroundColor = 'white';
+            button.style.color = '#333';
+            button.style.fontSize = '14px';
+            button.style.cursor = 'pointer';
+            button.style.transition = 'all 0.2s';
+            button.addEventListener('mouseenter', () => {
+                button.style.backgroundColor = '#f5f5f5';
+            });
+            button.addEventListener('mouseleave', () => {
+                button.style.backgroundColor = 'white';
+            });
+            button.addEventListener('click', () => {
+                this.selectQuickDate(btn.days);
+            });
+            buttonContainer.appendChild(button);
+        });
+
+        container.appendChild(buttonContainer);
 
         const options = {
             mode: 'range',
             dateFormat: 'Y-m-d',
             defaultDate: null,
             showMonths: 2,
-            theme: 'airbnb',
+            inline: true,
+            monthSelectorType: 'static',
+            weekdayLabels: ['日', '一', '二', '三', '四', '五', '六'],
+            todayClass: 'today-highlight',
             onClose: (selectedDates, dateStr, instance) => {
                 if (selectedDates.length === 2) {
                     const checkInDate = selectedDates[0];
@@ -80,8 +130,24 @@ const datepickerModule = {
             console.log('Using default locale');
         }
 
-        this.flatpickrInstance = flatpickr(container, options);
-        this.flatpickrInstance.open();
+        this.flatpickrInstance = flatpickr(calendarContainer, options);
+    },
+
+    selectQuickDate(daysFromNow) {
+        const checkIn = new Date();
+        checkIn.setDate(checkIn.getDate() + daysFromNow);
+        const checkOut = new Date(checkIn);
+        checkOut.setDate(checkOut.getDate() + 1);
+
+        this.flatpickrInstance.setDate([checkIn, checkOut], true);
+    },
+
+    getDaysUntilWeekend() {
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        if (dayOfWeek === 6) return 0; // 今天是周六
+        if (dayOfWeek === 5) return 1; // 今天是周五
+        return 6 - dayOfWeek; // 其他天
     },
 
     getSelectedDates() {
