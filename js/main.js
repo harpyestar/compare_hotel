@@ -75,6 +75,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // 初始更新页面文本
             updatePageText();
+            // 初始更新人数与客房数显示文本
+            guestsModule.updateDisplayText();
         }, 100);
     });
 });
@@ -152,17 +154,17 @@ function updatePageText() {
         destinationInput.placeholder = t('header.searchPlaceholder');
     }
     
-    // 更新日期选择按钮
+    // 更新日期选择按钮 - 只在显示默认文本时更新
     const dateDisplay = document.getElementById('dateDisplay');
     if (dateDisplay) {
-        dateDisplay.textContent = t('header.selectDate');
+        const defaultText = t('header.selectDate');
+        // 只有当日期显示的是默认文本时才更新，避免重置用户已选择的日期
+        if (dateDisplay.textContent === defaultText || dateDisplay.textContent === window.t('header.selectDate')) {
+            dateDisplay.textContent = defaultText;
+        }
     }
     
-    // 更新旅客选择按钮
-    const guestsDisplay = document.getElementById('guestsDisplay');
-    if (guestsDisplay) {
-        guestsDisplay.textContent = t('header.travelers');
-    }
+    // 旅客选择按钮由guestsModule.updateDisplayText()处理，不需要在这里更新
     
     // 更新登录/注册按钮
     const loginBtn = document.getElementById('loginBtn');
@@ -352,4 +354,6 @@ function updatePageText() {
 // 监听语言变化事件
 i18next.on('languageChanged', function(lng) {
     updatePageText();
+    // 更新人数与客房数显示文本
+    guestsModule.updateDisplayText();
 });

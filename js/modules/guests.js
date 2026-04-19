@@ -16,6 +16,7 @@ const guestsModule = {
     // 初始化人数与客房数选择功能
     init() {
         this.setupGuestsDropdown();
+        this.initLanguageChange();
     },
     
     // 设置人数与客房数下拉框
@@ -68,11 +69,42 @@ const guestsModule = {
         const rooms = this.guestCounts.rooms;
         const pets = this.guestCounts.pets;
         
+        // 检查是否有i18next实例，获取当前语言
+        let isEnglish = false;
+        if (typeof i18next !== 'undefined') {
+            isEnglish = i18next.language === 'en' || i18next.language === 'en-US' || i18next.language === 'en-GB';
+            console.log('Current language:', i18next.language, 'Is English:', isEnglish);
+        } else if (typeof window !== 'undefined' && window.t) {
+            // 尝试通过t函数判断语言
+            const testText = window.t('buttons.search');
+            isEnglish = testText === 'Search' || testText === 'search';
+            console.log('Detected language via t function:', isEnglish);
+        }
+        
+        // 根据语言设置文本
+        const adultText = isEnglish ? 'Adults' : '成人';
+        const childText = isEnglish ? 'Children' : '儿童';
+        const roomText = isEnglish ? 'Rooms' : '客房';
+        const petsText = isEnglish ? 'Pets allowed' : '可携带宠物';
+        const petsDescriptionText = isEnglish ? 'Show accommodations that welcome pets' : '显示欢迎宠物入住的住宿';
+        const resetText = isEnglish ? 'Reset' : '重设';
+        const applyText = isEnglish ? 'Apply' : '确定';
+        
+        console.log('Dropdown texts:', {
+            adultText,
+            childText,
+            roomText,
+            petsText,
+            petsDescriptionText,
+            resetText,
+            applyText
+        });
+        
         // 创建人数与客房数选择内容
         container.innerHTML = `
             <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span>成人</span>
+                    <span>${adultText}</span>
                     <div class="d-flex align-items-center">
                         <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="adultMinus">-</button>
                         <input type="number" class="form-control w-16 text-center mx-2" id="adultCount" value="${adults}" min="1" max="10">
@@ -80,7 +112,7 @@ const guestsModule = {
                     </div>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span>儿童</span>
+                    <span>${childText}</span>
                     <div class="d-flex align-items-center">
                         <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="childMinus">-</button>
                         <input type="number" class="form-control w-16 text-center mx-2" id="childCount" value="${children}" min="0" max="10">
@@ -88,7 +120,7 @@ const guestsModule = {
                     </div>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <span>客房</span>
+                    <span>${roomText}</span>
                     <div class="d-flex align-items-center">
                         <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="roomMinus">-</button>
                         <input type="number" class="form-control w-16 text-center mx-2" id="roomCount" value="${rooms}" min="1" max="10">
@@ -98,8 +130,8 @@ const guestsModule = {
                 <hr>
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <span>可携带宠物</span>
-                        <p class="text-sm text-muted">显示欢迎宠物入住的住宿</p>
+                        <span>${petsText}</span>
+                        <p class="text-sm text-muted">${petsDescriptionText}</p>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="petsAllowed" ${pets ? 'checked' : ''} style="width: 18px; height: 18px;">
@@ -107,8 +139,8 @@ const guestsModule = {
                 </div>
             </div>
             <div class="d-flex justify-content-between">
-                <button type="button" class="btn btn-outline-secondary" id="resetGuests">重设</button>
-                <button type="button" class="btn btn-primary" id="applyGuests" style="border-radius: 4px; padding: 6px 12px; width: auto; height: auto; display: inline-flex; align-items: center; justify-content: center;">确定</button>
+                <button type="button" class="btn btn-outline-secondary" id="resetGuests">${resetText}</button>
+                <button type="button" class="btn btn-primary" id="applyGuests" style="border-radius: 4px; padding: 6px 12px; width: auto; height: auto; display: inline-flex; align-items: center; justify-content: center;">${applyText}</button>
             </div>
         `;
         
@@ -199,12 +231,8 @@ const guestsModule = {
                 pets: pets
             };
             
-            // 显示旅客数量、客房数量和宠物选项
-            let displayText = `${totalGuests}位旅客, ${rooms}间客房`;
-            if (pets) {
-                displayText += ' 🐶'; // 添加宠物图标作为明显标志
-            }
-            guestsDisplay.textContent = displayText;
+            // 更新显示文本，支持语言切换
+            guestsModule.updateDisplayText();
             
             // 关闭下拉框，使用getElementById获取当前容器
             const currentContainer = document.getElementById('guestsDropdownContainer');
@@ -247,29 +275,95 @@ const guestsModule = {
     
     // 获取选择的人数和客房数
     getSelectedGuests() {
-        // 从显示文本中解析人数和客房数
-        const guestsDisplay = document.getElementById('guestsDisplay');
-        if (!guestsDisplay) return {
-            adults: 2,
-            children: 0,
-            rooms: 1,
-            pets: false
-        };
-        
-        const text = guestsDisplay.textContent;
-        const guestsMatch = text.match(/(\d+)位旅客/);
-        const roomsMatch = text.match(/(\d+)间客房/);
-        
-        const totalGuests = guestsMatch ? parseInt(guestsMatch[1]) : 2;
-        const rooms = roomsMatch ? parseInt(roomsMatch[1]) : 1;
-        
-        // 默认成人数量为总人数，儿童为0
+        // 从保存的状态中获取人数和客房数
         return {
-            adults: totalGuests,
-            children: 0,
-            rooms: rooms,
-            pets: false
+            adults: this.guestCounts.adults,
+            children: this.guestCounts.children,
+            rooms: this.guestCounts.rooms,
+            pets: this.guestCounts.pets
         };
+    },
+    
+    // 更新显示文本，支持语言切换
+    updateDisplayText() {
+        const guestsDisplay = document.getElementById('guestsDisplay');
+        if (!guestsDisplay) return;
+        
+        // 检查是否有i18next实例，获取当前语言
+        let isEnglish = false;
+        if (typeof i18next !== 'undefined') {
+            isEnglish = i18next.language === 'en' || i18next.language === 'en-US' || i18next.language === 'en-GB';
+            console.log('Current language in updateDisplayText:', i18next.language, 'Is English:', isEnglish);
+        } else if (typeof window !== 'undefined' && window.t) {
+            // 尝试通过t函数判断语言
+            const testText = window.t('buttons.search');
+            isEnglish = testText === 'Search' || testText === 'search';
+            console.log('Detected language via t function in updateDisplayText:', isEnglish);
+        }
+        
+        const adults = this.guestCounts.adults;
+        const children = this.guestCounts.children;
+        const rooms = this.guestCounts.rooms;
+        const pets = this.guestCounts.pets;
+        const totalGuests = adults + children;
+        
+        // 根据语言设置显示文本
+        let displayText;
+        if (isEnglish) {
+            displayText = `${totalGuests} guests, ${rooms} rooms`;
+        } else {
+            displayText = `${totalGuests}位旅客, ${rooms}间客房`;
+        }
+        
+        if (pets) {
+            displayText += ' 🐶'; // 添加宠物图标作为明显标志
+        }
+        
+        console.log('Updating display text to:', displayText);
+        guestsDisplay.textContent = displayText;
+    },
+    
+    // 初始化语言切换监听
+    initLanguageChange() {
+        // 检查是否有i18next实例
+        if (typeof i18next !== 'undefined') {
+            console.log('Initializing language change listener, current language:', i18next.language);
+            // 监听语言变化事件
+            i18next.on('languageChanged', (lng) => {
+                console.log('Language changed to:', lng);
+                this.updateDisplayText();
+                // 如果下拉框是打开的，重新渲染下拉框内容
+                const existingContainer = document.getElementById('guestsDropdownContainer');
+                if (existingContainer) {
+                    console.log('Dropdown is open, re-rendering...');
+                    // 保存当前选择的值
+                    const adultCount = document.getElementById('adultCount');
+                    const childCount = document.getElementById('childCount');
+                    const roomCount = document.getElementById('roomCount');
+                    const petsAllowed = document.getElementById('petsAllowed');
+                    
+                    if (adultCount && childCount && roomCount && petsAllowed) {
+                        // 更新保存的状态
+                        this.guestCounts = {
+                            adults: parseInt(adultCount.value),
+                            children: parseInt(childCount.value),
+                            rooms: parseInt(roomCount.value),
+                            pets: petsAllowed.checked
+                        };
+                        
+                        console.log('Saving current values:', this.guestCounts);
+                        
+                        // 关闭当前下拉框
+                        existingContainer.parentNode.removeChild(existingContainer);
+                        
+                        // 重新打开下拉框，以显示新的语言文本
+                        this.openGuestsDropdown();
+                    }
+                }
+            });
+        } else {
+            console.log('i18next is not defined, cannot initialize language change listener');
+        }
     }
 };
 
