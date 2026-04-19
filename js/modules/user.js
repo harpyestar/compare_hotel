@@ -67,7 +67,6 @@ const userModule = {
             });
             
             if (response.success) {
-                utils.setSessionId(response.sessionId);
                 this.showUserInfo(username);
                 utils.showToast('登录成功！');
                 const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
@@ -95,7 +94,6 @@ const userModule = {
             });
             
             if (response.success) {
-                utils.setSessionId(response.sessionId);
                 this.showUserInfo(username);
                 utils.showToast('注册成功！');
                 const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
@@ -112,15 +110,11 @@ const userModule = {
         if (!logoutBtn) return;
         
         logoutBtn.addEventListener('click', async () => {
-            const sessionId = utils.getSessionId();
-            if (!sessionId) return;
-            
             const response = await utils.fetch('/api/logout', {
                 method: 'POST'
             });
             
             if (response.success) {
-                utils.removeSessionId();
                 this.showLoginRegisterButtons();
                 utils.showToast('退出登录成功！');
             } else {
@@ -131,18 +125,11 @@ const userModule = {
     
     // 检查登录状态
     async checkLoginStatus() {
-        const sessionId = utils.getSessionId();
-        if (!sessionId) {
-            this.showLoginRegisterButtons();
-            return;
-        }
-        
         const response = await utils.fetch('/api/check-login');
         
         if (response.loggedIn) {
             this.showUserInfo(response.username);
         } else {
-            utils.removeSessionId();
             this.showLoginRegisterButtons();
         }
     },

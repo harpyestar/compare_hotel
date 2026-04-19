@@ -110,24 +110,12 @@ const dbConfig = {
     database: 'hotel_search'
 };
 
-// 内存存储作为回退
-let users = [];
-let sessions = [];
-let searchHistory = {};
-let favorites = {};
-
 // 数据库连接状态
 let dbConnected = false;
 
 // 生成会话ID
 function generateSessionId() {
     return Math.random().toString(36).substr(2, 9);
-}
-
-// 切换到内存存储
-function useMemoryStorage() {
-    dbConnected = false;
-    console.log('切换到内存存储模式');
 }
 
 // 初始化数据库
@@ -240,82 +228,57 @@ app.post('/api/register', async (req, res) => {
             return res.json({ success: false, message: '用户名和密码不能为空' });
         }
         
-        // 尝试使用数据库存储
-        if (dbConnected) {
-            console.log('使用数据库存储进行注册');
-            try {
-                // 创建数据库连接
-                console.log('创建数据库连接');
-                const connection = await mysql.createConnection(dbConfig);
-                console.log('数据库连接成功');
-                
-                // 检查用户名是否已存在
-                console.log('检查用户名是否已存在:', username);
-                const [existingUsers] = await connection.execute(
-                    'SELECT * FROM users WHERE username = ?',
-                    [username]
-                );
-                console.log('检查结果:', existingUsers.length);
-                
-                if (existingUsers.length > 0) {
-                    await connection.end();
-                    return res.json({ success: false, message: '用户名已存在' });
-                }
-                
-                // 创建新用户
-                console.log('创建新用户:', username);
-                await connection.execute(
-                    'INSERT INTO users (username, password) VALUES (?, ?)',
-                    [username, password]
-                );
-                console.log('用户创建成功');
-                
-                // 创建会话
-                const sessionId = generateSessionId();
-                console.log('创建会话:', sessionId);
-                await connection.execute(
-                    'INSERT INTO sessions (session_id, username) VALUES (?, ?)',
-                    [sessionId, username]
-                );
-                console.log('会话创建成功');
-                
-                // 关闭连接
+        if (!dbConnected) {
+            return res.json({ success: false, message: '数据库连接失败，无法注册' });
+        }
+        
+        // 使用数据库存储
+        console.log('使用数据库存储进行注册');
+        try {
+            // 创建数据库连接
+            console.log('创建数据库连接');
+            const connection = await mysql.createConnection(dbConfig);
+            console.log('数据库连接成功');
+            
+            // 检查用户名是否已存在
+            console.log('检查用户名是否已存在:', username);
+            const [existingUsers] = await connection.execute(
+                'SELECT * FROM users WHERE username = ?',
+                [username]
+            );
+            console.log('检查结果:', existingUsers.length);
+            
+            if (existingUsers.length > 0) {
                 await connection.end();
-                console.log('数据库连接关闭');
-                
-                return res.json({ success: true, username, sessionId });
-            } catch (error) {
-                console.error('注册错误:', error);
-                // 数据库失败，使用内存存储作为回退
-                console.log('数据库注册失败，使用内存存储作为回退');
-                useMemoryStorage();
-                // 继续执行内存存储的代码
+                return res.json({ success: false, message: '用户名已存在' });
             }
+            
+            // 创建新用户
+            console.log('创建新用户:', username);
+            await connection.execute(
+                'INSERT INTO users (username, password) VALUES (?, ?)',
+                [username, password]
+            );
+            console.log('用户创建成功');
+            
+            // 创建会话
+            const sessionId = generateSessionId();
+            console.log('创建会话:', sessionId);
+            await connection.execute(
+                'INSERT INTO sessions (session_id, username) VALUES (?, ?)',
+                [sessionId, username]
+            );
+            console.log('会话创建成功');
+            
+            // 关闭连接
+            await connection.end();
+            console.log('数据库连接关闭');
+            
+            return res.json({ success: true, username, sessionId });
+        } catch (error) {
+            console.error('注册错误:', error);
+            return res.json({ success: false, message: '注册失败，请稍后重试' });
         }
-        
-        // 使用内存存储
-        console.log('使用内存存储进行注册');
-        // 检查用户名是否已存在
-        const existingUser = users.find(user => user.username === username);
-        if (existingUser) {
-            return res.json({ success: false, message: '用户名已存在' });
-        }
-        
-        // 创建新用户
-        const newUser = { username, password };
-        users.push(newUser);
-        console.log('内存存储用户创建成功:', username);
-        
-        // 创建会话
-        const sessionId = generateSessionId();
-        sessions.push({ sessionId, username });
-        console.log('内存存储会话创建成功:', sessionId);
-        
-        // 初始化搜索历史和收藏
-        searchHistory[username] = [];
-        favorites[username] = [];
-        
-        return res.json({ success: true, username, sessionId });
     } catch (error) {
         console.error('注册API错误:', error);
         return res.json({ success: false, message: '注册失败，请稍后重试' });
@@ -330,178 +293,128 @@ app.post('/api/login', async (req, res) => {
         return res.json({ success: false, message: '用户名和密码不能为空' });
     }
     
-    // 尝试使用数据库存储
-    if (dbConnected) {
-        try {
-            // 创建数据库连接
-            const connection = await mysql.createConnection(dbConfig);
-            
-            // 验证用户
-            const [users] = await connection.execute(
-                'SELECT * FROM users WHERE username = ? AND password = ?',
-                [username, password]
-            );
-            
-            if (users.length === 0) {
-                await connection.end();
-                return res.json({ success: false, message: '用户名或密码错误' });
-            }
-            
-            // 创建会话
-            const sessionId = generateSessionId();
-            await connection.execute(
-                'INSERT INTO sessions (session_id, username) VALUES (?, ?)',
-                [sessionId, username]
-            );
-            
-            // 关闭连接
+    if (!dbConnected) {
+        return res.json({ success: false, message: '数据库连接失败，无法登录' });
+    }
+    
+    // 使用数据库存储
+    try {
+        // 创建数据库连接
+        const connection = await mysql.createConnection(dbConfig);
+        
+        // 验证用户
+        const [users] = await connection.execute(
+            'SELECT * FROM users WHERE username = ? AND password = ?',
+            [username, password]
+        );
+        
+        if (users.length === 0) {
             await connection.end();
-            
-            res.json({ success: true, username, sessionId });
-        } catch (error) {
-            console.error('登录错误:', error);
-            // 数据库失败，使用内存存储作为回退
-            console.log('数据库登录失败，使用内存存储作为回退');
-            useMemoryStorage();
+            return res.json({ success: false, message: '用户名或密码错误' });
         }
+        
+        // 创建会话
+        const sessionId = generateSessionId();
+        await connection.execute(
+            'INSERT INTO sessions (session_id, username) VALUES (?, ?)',
+            [sessionId, username]
+        );
+        
+        // 关闭连接
+        await connection.end();
+        
+        res.json({ success: true, username, sessionId });
+    } catch (error) {
+        console.error('登录错误:', error);
+        return res.json({ success: false, message: '登录失败，请稍后重试' });
     }
-    
-    // 使用内存存储
-    // 验证用户
-    const user = users.find(user => user.username === username && user.password === password);
-    if (!user) {
-        return res.json({ success: false, message: '用户名或密码错误' });
-    }
-    
-    // 创建会话
-    const sessionId = generateSessionId();
-    sessions.push({ sessionId, username });
-    
-    res.json({ success: true, username, sessionId });
 });
 
 // 退出登录API
 app.post('/api/logout', async (req, res) => {
     const sessionId = req.headers['authorization'];
     
-    // 尝试使用数据库存储
-    if (dbConnected) {
-        try {
-            // 创建数据库连接
-            const connection = await mysql.createConnection(dbConfig);
-            
-            if (sessionId) {
-                await connection.execute(
-                    'DELETE FROM sessions WHERE session_id = ?',
-                    [sessionId]
-                );
-            }
-            
-            // 关闭连接
-            await connection.end();
-            
-            res.json({ success: true });
-        } catch (error) {
-            console.error('退出登录错误:', error);
-            // 数据库失败，使用内存存储作为回退
-            console.log('数据库退出登录失败，使用内存存储作为回退');
-            useMemoryStorage();
+    if (!dbConnected) {
+        return res.json({ success: false, message: '数据库连接失败，无法退出登录' });
+    }
+    
+    // 使用数据库存储
+    try {
+        // 创建数据库连接
+        const connection = await mysql.createConnection(dbConfig);
+        
+        if (sessionId) {
+            await connection.execute(
+                'DELETE FROM sessions WHERE session_id = ?',
+                [sessionId]
+            );
         }
+        
+        // 关闭连接
+        await connection.end();
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('退出登录错误:', error);
+        return res.json({ success: false, message: '退出登录失败，请稍后重试' });
     }
-    
-    // 使用内存存储
-    if (sessionId) {
-        sessions = sessions.filter(session => session.sessionId !== sessionId);
-    }
-    
-    res.json({ success: true });
 });
 
 // 检查登录状态API
 app.get('/api/check-login', async (req, res) => {
     const sessionId = req.headers['authorization'];
     
-    // 尝试使用数据库存储
-    if (dbConnected) {
-        try {
-            // 创建数据库连接
-            const connection = await mysql.createConnection(dbConfig);
-            
-            if (sessionId) {
-                const [sessions] = await connection.execute(
-                    'SELECT * FROM sessions WHERE session_id = ?',
-                    [sessionId]
-                );
-                
-                if (sessions.length > 0) {
-                    await connection.end();
-                    return res.json({ loggedIn: true, username: sessions[0].username });
-                }
-            }
-            
-            // 关闭连接
-            await connection.end();
-            
-            res.json({ loggedIn: false });
-        } catch (error) {
-            console.error('检查登录状态错误:', error);
-            // 数据库失败，使用内存存储作为回退
-            console.log('数据库检查登录状态失败，使用内存存储作为回退');
-            useMemoryStorage();
-            // 使用内存存储
-            if (sessionId) {
-                const session = sessions.find(s => s.sessionId === sessionId);
-                if (session) {
-                    return res.json({ loggedIn: true, username: session.username });
-                }
-            }
-            return res.json({ loggedIn: false });
-        }
+    if (!dbConnected) {
+        return res.json({ loggedIn: false, message: '数据库连接失败' });
     }
     
-    // 使用内存存储
-    if (sessionId) {
-        const session = sessions.find(session => session.sessionId === sessionId);
-        if (session) {
-            return res.json({ loggedIn: true, username: session.username });
+    // 使用数据库存储
+    try {
+        // 创建数据库连接
+        const connection = await mysql.createConnection(dbConfig);
+        
+        if (sessionId) {
+            const [sessions] = await connection.execute(
+                'SELECT * FROM sessions WHERE session_id = ?',
+                [sessionId]
+            );
+            
+            if (sessions.length > 0) {
+                await connection.end();
+                return res.json({ loggedIn: true, username: sessions[0].username });
+            }
         }
+        
+        // 关闭连接
+        await connection.end();
+        
+        res.json({ loggedIn: false });
+    } catch (error) {
+        console.error('检查登录状态错误:', error);
+        return res.json({ loggedIn: false, message: '检查登录状态失败' });
     }
-    
-    res.json({ loggedIn: false });
 });
 
 // 获取用户信息
 async function getUserFromSession(req) {
     const sessionId = req.headers['authorization'];
-    if (sessionId) {
-        // 尝试使用数据库存储
-        if (dbConnected) {
-            try {
-                // 创建数据库连接
-                const connection = await mysql.createConnection(dbConfig);
-                
-                const [sessions] = await connection.execute(
-                    'SELECT * FROM sessions WHERE session_id = ?',
-                    [sessionId]
-                );
-                
-                await connection.end();
-                
-                if (sessions.length > 0) {
-                    return sessions[0].username;
-                }
-            } catch (error) {
-                console.error('获取用户信息错误:', error);
-                // 数据库失败，使用内存存储作为回退
-                console.log('数据库获取用户信息失败，使用内存存储作为回退');
-                useMemoryStorage();
+    if (sessionId && dbConnected) {
+        try {
+            // 创建数据库连接
+            const connection = await mysql.createConnection(dbConfig);
+            
+            const [sessions] = await connection.execute(
+                'SELECT * FROM sessions WHERE session_id = ?',
+                [sessionId]
+            );
+            
+            await connection.end();
+            
+            if (sessions.length > 0) {
+                return sessions[0].username;
             }
-        }
-        
-        // 使用内存存储
-        const session = sessions.find(session => session.sessionId === sessionId);
-        if (session) {
-            return session.username;
+        } catch (error) {
+            console.error('获取用户信息错误:', error);
         }
     }
     return null;
@@ -519,50 +432,35 @@ app.post('/api/history', async (req, res) => {
         return res.json({ success: false, message: '搜索信息不完整' });
     }
     
-    // 尝试使用数据库存储
-    if (dbConnected) {
-        try {
-            // 创建数据库连接
-            const connection = await mysql.createConnection(dbConfig);
-            
-            // 保存搜索历史
-            await connection.execute(
-                'INSERT INTO search_history (username, destination, check_in, check_out) VALUES (?, ?, ?, ?)',
-                [username, destination, checkIn, checkOut]
-            );
-            
-            // 限制历史记录数量
-            await connection.execute(
-                'DELETE FROM search_history WHERE username = ? AND id NOT IN (SELECT id FROM (SELECT id FROM search_history WHERE username = ? ORDER BY timestamp DESC LIMIT 10) as temp)',
-                [username, username]
-            );
-            
-            // 关闭连接
-            await connection.end();
-            
-            res.json({ success: true });
-        } catch (error) {
-            console.error('保存搜索历史错误:', error);
-            // 数据库失败，使用内存存储作为回退
-            console.log('数据库保存搜索历史失败，使用内存存储作为回退');
-            useMemoryStorage();
-        }
+    if (!dbConnected) {
+        return res.json({ success: false, message: '数据库连接失败，无法保存搜索历史' });
     }
     
-    // 使用内存存储
-    // 保存搜索历史
-    if (!searchHistory[username]) {
-        searchHistory[username] = [];
+    // 使用数据库存储
+    try {
+        // 创建数据库连接
+        const connection = await mysql.createConnection(dbConfig);
+        
+        // 保存搜索历史
+        await connection.execute(
+            'INSERT INTO search_history (username, destination, check_in, check_out) VALUES (?, ?, ?, ?)',
+            [username, destination, checkIn, checkOut]
+        );
+        
+        // 限制历史记录数量
+        await connection.execute(
+            'DELETE FROM search_history WHERE username = ? AND id NOT IN (SELECT id FROM (SELECT id FROM search_history WHERE username = ? ORDER BY timestamp DESC LIMIT 10) as temp)',
+            [username, username]
+        );
+        
+        // 关闭连接
+        await connection.end();
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('保存搜索历史错误:', error);
+        return res.json({ success: false, message: '保存搜索历史失败，请稍后重试' });
     }
-    
-    searchHistory[username].unshift({ destination, checkIn, checkOut, timestamp: new Date().toISOString() });
-    
-    // 限制历史记录数量
-    if (searchHistory[username].length > 10) {
-        searchHistory[username] = searchHistory[username].slice(0, 10);
-    }
-    
-    res.json({ success: true });
 });
 
 // 获取搜索历史API
@@ -572,33 +470,29 @@ app.get('/api/history', async (req, res) => {
         return res.json({ success: false, message: '请先登录', history: [] });
     }
     
-    // 尝试使用数据库存储
-    if (dbConnected) {
-        try {
-            // 创建数据库连接
-            const connection = await mysql.createConnection(dbConfig);
-            
-            // 获取搜索历史
-            const [history] = await connection.execute(
-                'SELECT destination, check_in as checkIn, check_out as checkOut, timestamp FROM search_history WHERE username = ? ORDER BY timestamp DESC',
-                [username]
-            );
-            
-            // 关闭连接
-            await connection.end();
-            
-            res.json({ success: true, history });
-        } catch (error) {
-            console.error('获取搜索历史错误:', error);
-            // 数据库失败，使用内存存储作为回退
-            console.log('数据库获取搜索历史失败，使用内存存储作为回退');
-            useMemoryStorage();
-        }
+    if (!dbConnected) {
+        return res.json({ success: false, message: '数据库连接失败，无法获取搜索历史', history: [] });
     }
     
-    // 使用内存存储
-    const history = searchHistory[username] || [];
-    res.json({ success: true, history });
+    // 使用数据库存储
+    try {
+        // 创建数据库连接
+        const connection = await mysql.createConnection(dbConfig);
+        
+        // 获取搜索历史
+        const [history] = await connection.execute(
+            'SELECT destination, check_in as checkIn, check_out as checkOut, timestamp FROM search_history WHERE username = ? ORDER BY timestamp DESC',
+            [username]
+        );
+        
+        // 关闭连接
+        await connection.end();
+        
+        res.json({ success: true, history });
+    } catch (error) {
+        console.error('获取搜索历史错误:', error);
+        return res.json({ success: false, message: '获取搜索历史失败，请稍后重试', history: [] });
+    }
 });
 
 // 收藏酒店API
@@ -613,54 +507,40 @@ app.post('/api/favorites', async (req, res) => {
         return res.json({ success: false, message: '酒店信息不完整' });
     }
     
-    // 尝试使用数据库存储
-    if (dbConnected) {
-        try {
-            // 创建数据库连接
-            const connection = await mysql.createConnection(dbConfig);
-            
-            // 检查是否已经收藏
-            const [existingFavorites] = await connection.execute(
-                'SELECT * FROM favorites WHERE username = ? AND hotel_id = ?',
-                [username, hotel.id]
-            );
-            
-            if (existingFavorites.length > 0) {
-                await connection.end();
-                return res.json({ success: false, message: '酒店已收藏' });
-            }
-            
-            // 保存收藏
-            await connection.execute(
-                'INSERT INTO favorites (username, hotel_id, hotel_name, hotel_address, hotel_price, hotel_image) VALUES (?, ?, ?, ?, ?, ?)',
-                [username, hotel.id, hotel.name, hotel.address, hotel.price, hotel.image]
-            );
-            
-            // 关闭连接
+    if (!dbConnected) {
+        return res.json({ success: false, message: '数据库连接失败，无法收藏酒店' });
+    }
+    
+    // 使用数据库存储
+    try {
+        // 创建数据库连接
+        const connection = await mysql.createConnection(dbConfig);
+        
+        // 检查是否已经收藏
+        const [existingFavorites] = await connection.execute(
+            'SELECT * FROM favorites WHERE username = ? AND hotel_id = ?',
+            [username, hotel.id]
+        );
+        
+        if (existingFavorites.length > 0) {
             await connection.end();
-            
-            res.json({ success: true });
-        } catch (error) {
-            console.error('收藏酒店错误:', error);
-            // 数据库失败，使用内存存储作为回退
-            console.log('数据库收藏酒店失败，使用内存存储作为回退');
-            useMemoryStorage();
+            return res.json({ success: false, message: '酒店已收藏' });
         }
+        
+        // 保存收藏
+        await connection.execute(
+            'INSERT INTO favorites (username, hotel_id, hotel_name, hotel_address, hotel_price, hotel_image) VALUES (?, ?, ?, ?, ?, ?)',
+            [username, hotel.id, hotel.name, hotel.address, hotel.price, hotel.image]
+        );
+        
+        // 关闭连接
+        await connection.end();
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('收藏酒店错误:', error);
+        return res.json({ success: false, message: '收藏酒店失败，请稍后重试' });
     }
-    
-    // 使用内存存储
-    // 检查是否已经收藏
-    if (!favorites[username]) {
-        favorites[username] = [];
-    }
-    
-    const existingFavorite = favorites[username].find(fav => fav.id === hotel.id);
-    if (existingFavorite) {
-        return res.json({ success: false, message: '酒店已收藏' });
-    }
-    
-    favorites[username].push(hotel);
-    res.json({ success: true });
 });
 
 // 获取收藏酒店API
@@ -670,33 +550,29 @@ app.get('/api/favorites', async (req, res) => {
         return res.json({ success: false, message: '请先登录', favorites: [] });
     }
     
-    // 尝试使用数据库存储
-    if (dbConnected) {
-        try {
-            // 创建数据库连接
-            const connection = await mysql.createConnection(dbConfig);
-            
-            // 获取收藏酒店
-            const [favorites] = await connection.execute(
-                'SELECT hotel_id as id, hotel_name as name, hotel_address as address, hotel_price as price, hotel_image as image FROM favorites WHERE username = ?',
-                [username]
-            );
-            
-            // 关闭连接
-            await connection.end();
-            
-            res.json({ success: true, favorites });
-        } catch (error) {
-            console.error('获取收藏酒店错误:', error);
-            // 数据库失败，使用内存存储作为回退
-            console.log('数据库获取收藏酒店失败，使用内存存储作为回退');
-            useMemoryStorage();
-        }
+    if (!dbConnected) {
+        return res.json({ success: false, message: '数据库连接失败，无法获取收藏酒店', favorites: [] });
     }
     
-    // 使用内存存储
-    const userFavorites = favorites[username] || [];
-    res.json({ success: true, favorites: userFavorites });
+    // 使用数据库存储
+    try {
+        // 创建数据库连接
+        const connection = await mysql.createConnection(dbConfig);
+        
+        // 获取收藏酒店
+        const [favorites] = await connection.execute(
+            'SELECT hotel_id as id, hotel_name as name, hotel_address as address, hotel_price as price, hotel_image as image FROM favorites WHERE username = ?',
+            [username]
+        );
+        
+        // 关闭连接
+        await connection.end();
+        
+        res.json({ success: true, favorites });
+    } catch (error) {
+        console.error('获取收藏酒店错误:', error);
+        return res.json({ success: false, message: '获取收藏酒店失败，请稍后重试', favorites: [] });
+    }
 });
 
 // 取消收藏酒店API
@@ -708,46 +584,32 @@ app.delete('/api/favorites/:id', async (req, res) => {
     
     const hotelId = req.params.id;
     
-    // 尝试使用数据库存储
-    if (dbConnected) {
-        try {
-            // 创建数据库连接
-            const connection = await mysql.createConnection(dbConfig);
-            
-            // 取消收藏
-            const [result] = await connection.execute(
-                'DELETE FROM favorites WHERE username = ? AND hotel_id = ?',
-                [username, hotelId]
-            );
-            
-            // 关闭连接
-            await connection.end();
-            
-            if (result.affectedRows > 0) {
-                res.json({ success: true });
-            } else {
-                res.json({ success: false, message: '酒店未收藏' });
-            }
-        } catch (error) {
-            console.error('取消收藏酒店错误:', error);
-            // 数据库失败，使用内存存储作为回退
-            console.log('数据库取消收藏酒店失败，使用内存存储作为回退');
-            useMemoryStorage();
+    if (!dbConnected) {
+        return res.json({ success: false, message: '数据库连接失败，无法取消收藏酒店' });
+    }
+    
+    // 使用数据库存储
+    try {
+        // 创建数据库连接
+        const connection = await mysql.createConnection(dbConfig);
+        
+        // 取消收藏
+        const [result] = await connection.execute(
+            'DELETE FROM favorites WHERE username = ? AND hotel_id = ?',
+            [username, hotelId]
+        );
+        
+        // 关闭连接
+        await connection.end();
+        
+        if (result.affectedRows > 0) {
+            res.json({ success: true });
+        } else {
+            res.json({ success: false, message: '酒店未收藏' });
         }
-    }
-    
-    // 使用内存存储
-    if (!favorites[username]) {
-        return res.json({ success: false, message: '暂无收藏酒店' });
-    }
-    
-    const initialLength = favorites[username].length;
-    favorites[username] = favorites[username].filter(hotel => hotel.id !== hotelId);
-    
-    if (favorites[username].length < initialLength) {
-        res.json({ success: true });
-    } else {
-        res.json({ success: false, message: '酒店未收藏' });
+    } catch (error) {
+        console.error('取消收藏酒店错误:', error);
+        return res.json({ success: false, message: '取消收藏酒店失败，请稍后重试' });
     }
 });
 

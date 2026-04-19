@@ -50,11 +50,9 @@ const utils = {
     // 发送HTTP请求
     async fetch(url, options = {}) {
         try {
-            const sessionId = this.getSessionId();
             const response = await fetch(`${config.apiUrl}${url}`, {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': sessionId || '',
                     ...options.headers
                 },
                 ...options
@@ -84,26 +82,6 @@ const utils = {
                 document.body.removeChild(toast);
             }, 500);
         }, 3000);
-    },
-    
-    // 获取sessionId
-    getSessionId() {
-        return localStorage.getItem('sessionId');
-    },
-    
-    // 设置sessionId
-    setSessionId(sessionId) {
-        localStorage.setItem('sessionId', sessionId);
-    },
-    
-    // 移除sessionId
-    removeSessionId() {
-        localStorage.removeItem('sessionId');
-    },
-    
-    // 检查是否登录
-    isLoggedIn() {
-        return !!localStorage.getItem('sessionId');
     }
 };
 

@@ -141,14 +141,12 @@ const datepickerModule = {
         checkOut.setDate(checkOut.getDate() + 1);
 
         this.flatpickrInstance.setDate([checkIn, checkOut], true);
-        
-        // 直接完成选择并关闭日历
+
         const dateDisplay = document.getElementById('dateDisplay');
         const checkInStr = `${checkIn.getMonth() + 1}月${checkIn.getDate()}日`;
         const checkOutStr = `${checkOut.getMonth() + 1}月${checkOut.getDate()}日`;
         dateDisplay.textContent = `${checkInStr} - ${checkOutStr}`;
-        
-        // 关闭日历
+
         const container = document.getElementById('datePickerContainer');
         if (container && container.parentNode) {
             container.parentNode.removeChild(container);
@@ -159,9 +157,9 @@ const datepickerModule = {
     getDaysUntilWeekend() {
         const today = new Date();
         const dayOfWeek = today.getDay();
-        if (dayOfWeek === 6) return 0; // 今天是周六
-        if (dayOfWeek === 5) return 1; // 今天是周五
-        return 6 - dayOfWeek; // 其他天
+        if (dayOfWeek === 6) return 0;
+        if (dayOfWeek === 5) return 1;
+        return 6 - dayOfWeek;
     },
 
     getSelectedDates() {
@@ -171,11 +169,10 @@ const datepickerModule = {
         if (text === '选择日期' || !text.includes(' - ')) {
             return { checkIn: null, checkOut: null };
         }
-        
-        // 解析日期字符串
+
         const parts = text.split(' - ');
         if (parts.length !== 2) return { checkIn: null, checkOut: null };
-        
+
         const parseDate = (dateStr) => {
             const match = dateStr.match(/(\d+)月(\d+)日/);
             if (!match) return null;
@@ -184,16 +181,15 @@ const datepickerModule = {
             const date = new Date();
             date.setMonth(month);
             date.setDate(day);
-            // 处理月份跨年的情况
             if (month < date.getMonth()) {
                 date.setFullYear(date.getFullYear() + 1);
             }
             return date;
         };
-        
+
         const checkIn = parseDate(parts[0]);
         const checkOut = parseDate(parts[1]);
-        
+
         return { checkIn, checkOut };
     }
 };
