@@ -448,6 +448,14 @@ app.get('/api/check-login', async (req, res) => {
             // 数据库失败，使用内存存储作为回退
             console.log('数据库检查登录状态失败，使用内存存储作为回退');
             useMemoryStorage();
+            // 使用内存存储
+            if (sessionId) {
+                const session = sessions.find(s => s.sessionId === sessionId);
+                if (session) {
+                    return res.json({ loggedIn: true, username: session.username });
+                }
+            }
+            return res.json({ loggedIn: false });
         }
     }
     
