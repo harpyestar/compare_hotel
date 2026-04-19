@@ -346,6 +346,53 @@ function updatePageText() {
         applyGuests.textContent = t('guests.apply');
     }
     
+    // 更新登录模态框
+    const loginModalLabel = document.getElementById('loginModalLabel');
+    if (loginModalLabel) {
+        loginModalLabel.textContent = t('login.title');
+    }
+    
+    const loginUsernameLabel = document.querySelector('label[for="loginUsername"]');
+    if (loginUsernameLabel) {
+        loginUsernameLabel.textContent = t('login.username');
+    }
+    
+    const loginPasswordLabel = document.querySelector('label[for="loginPassword"]');
+    if (loginPasswordLabel) {
+        loginPasswordLabel.textContent = t('login.password');
+    }
+    
+    const loginSubmitBtn = document.querySelector('#loginForm button[type="submit"]');
+    if (loginSubmitBtn) {
+        loginSubmitBtn.textContent = t('login.submit');
+    }
+    
+    // 更新注册模态框
+    const registerModalLabel = document.getElementById('registerModalLabel');
+    if (registerModalLabel) {
+        registerModalLabel.textContent = t('register.title');
+    }
+    
+    const registerUsernameLabel = document.querySelector('label[for="registerUsername"]');
+    if (registerUsernameLabel) {
+        registerUsernameLabel.textContent = t('register.username');
+    }
+    
+    const registerPasswordLabel = document.querySelector('label[for="registerPassword"]');
+    if (registerPasswordLabel) {
+        registerPasswordLabel.textContent = t('register.password');
+    }
+    
+    const registerConfirmPasswordLabel = document.querySelector('label[for="registerConfirmPassword"]');
+    if (registerConfirmPasswordLabel) {
+        registerConfirmPasswordLabel.textContent = t('register.confirmPassword');
+    }
+    
+    const registerSubmitBtn = document.querySelector('#registerForm button[type="submit"]');
+    if (registerSubmitBtn) {
+        registerSubmitBtn.textContent = t('register.submit');
+    }
+    
     // 更新比较按钮
     const compareBtn = document.getElementById('compareBtn');
     if (compareBtn) {

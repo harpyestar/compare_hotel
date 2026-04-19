@@ -1,0 +1,78 @@
+{
+  "header": {
+    "title": "Smart Hotel Booking",
+    "subtitle": "A smarter platform, find the best price for you",
+    "searchPlaceholder": "Enter city or hotel name",
+    "selectDate": "Select dates",
+    "travelers": "2 travelers, 1 room",
+    "step1": "1. Enter Destination",
+    "step2": "2. Select Dates",
+    "step3": "3. Browse Hotels",
+    "step4": "4. Compare Prices"
+  },
+  "search": {
+    "hotDestinations": "Popular Destinations"
+  },
+  "hotels": {
+    "title": "Featured Hotels",
+    "subtitle": "Discover the best hotels for your stay",
+    "hotSearch": "Hot Searches"
+  },
+  "platforms": {
+    "title": "Our Partners"
+  },
+  "buttons": {
+    "search": "Search",
+    "viewDetails": "View Details",
+    "close": "Close",
+    "prev": "Previous",
+    "next": "Next",
+    "login": "Login",
+    "register": "Register",
+    "history": "History",
+    "favorite": "Favorites",
+    "logout": "Logout",
+    "compare": "Compare"
+  },
+  "guide": {
+    "title": "How It Works",
+    "intro": "Booking a hotel with our platform is easy and convenient. Follow these simple steps to find the perfect accommodation for your trip."
+  },
+  "guests": {
+    "title": "Guests & Rooms",
+    "adult": "Adults",
+    "child": "Children",
+    "room": "Rooms",
+    "pets": "Pets allowed",
+    "petsDescription": "Show accommodations that welcome pets",
+    "reset": "Reset",
+    "apply": "Apply"
+  },
+  "login": {
+    "title": "User Login",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Login"
+  },
+  "register": {
+    "title": "User Registration",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "submit": "Register"
+  },
+  "datepicker": {
+    "quickButtons": {
+      "tonight": "Tonight",
+      "tomorrow": "Tomorrow",
+      "thisWeekend": "This Weekend",
+      "nextWeekend": "Next Weekend"
+    },
+    "dateFormat": "M/d"
+  },
+  "toast": {
+    "loginSuccess": "Login successful!",
+    "registerSuccess": "Registration successful!",
+    "logoutSuccess": "Logout successful!"
+  }
+}
