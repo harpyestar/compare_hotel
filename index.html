@@ -17,6 +17,9 @@
     <link rel="stylesheet" href="css/components/modal.css">
     <link rel="stylesheet" href="css/components/guide.css">
     <link rel="stylesheet" href="css/components/footer.css">
+    <script src="https://cdn.jsdelivr.net/npm/i18next@26.0.6/i18next.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/i18next-http-backend@3.0.5/i18nextHttpBackend.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector@8.2.1/i18nextBrowserLanguageDetector.min.js"></script>
 </head>
 <body>
 
@@ -30,7 +33,7 @@
     <!-- 参考平台区域 -->
     <div class="platforms">
         <div class="container">
-            <h2>合作平台</h2>
+            <h2 id="platformsTitle">合作平台</h2>
             <div class="row">
                 <div class="col-md-3">
                     <div class="platform-card d-flex flex-column align-items-center">
@@ -63,12 +66,12 @@
     <!-- 热门酒店推荐 -->
     <div class="hotels">
         <div class="container">
-            <h2>热门搜索酒店</h2>
-            <p class="text-center text-muted mb-5">点击下方酒店快速查看详情</p>
+            <h2 id="hotelsTitle">热门搜索酒店</h2>
+            <p class="text-center text-muted mb-5" id="hotelsSubtitle">点击下方酒店快速查看详情</p>
             
             <!-- 热门搜索酒店向导 -->
             <div class="search-guide mb-5">
-                <h5>热门搜索</h5>
+                <h5 id="hotSearchTitle">热门搜索</h5>
                 <div class="guide-items">
                     <span class="guide-item">北京酒店</span>
                     <span class="guide-item">上海酒店</span>
@@ -101,7 +104,7 @@
                             </div>
                             <p class="hotel-address">北京市朝阳区建国路87号</p>
                             <div class="hotel-price">¥1,288 <span>起/晚</span></div>
-                            <button class="btn btn-sm btn-outline-primary">查看详情</button>
+                            <button class="btn btn-sm btn-outline-primary view-details-btn">查看详情</button>
                         </div>
                     </div>
                 </div>
@@ -124,7 +127,7 @@
                             </div>
                             <p class="hotel-address">上海市浦东新区富城路33号</p>
                             <div class="hotel-price">¥1,588 <span>起/晚</span></div>
-                            <button class="btn btn-sm btn-outline-primary">查看详情</button>
+                            <button class="btn btn-sm btn-outline-primary view-details-btn">查看详情</button>
                         </div>
                     </div>
                 </div>
@@ -147,7 +150,7 @@
                             </div>
                             <p class="hotel-address">海南省三亚市海棠湾海棠北路36号</p>
                             <div class="hotel-price">¥2,188 <span>起/晚</span></div>
-                            <button class="btn btn-sm btn-outline-primary">查看详情</button>
+                            <button class="btn btn-sm btn-outline-primary view-details-btn">查看详情</button>
                         </div>
                     </div>
                 </div>
@@ -170,7 +173,7 @@
                             </div>
                             <p class="hotel-address">浙江省杭州市西湖区龙井路5号</p>
                             <div class="hotel-price">¥1,888 <span>起/晚</span></div>
-                            <button class="btn btn-sm btn-outline-primary">查看详情</button>
+                            <button class="btn btn-sm btn-outline-primary view-details-btn">查看详情</button>
                         </div>
                     </div>
                 </div>
@@ -193,7 +196,7 @@
                             </div>
                             <p class="hotel-address">广东省广州市天河区珠江西路5号</p>
                             <div class="hotel-price">¥1,388 <span>起/晚</span></div>
-                            <button class="btn btn-sm btn-outline-primary">查看详情</button>
+                            <button class="btn btn-sm btn-outline-primary view-details-btn">查看详情</button>
                         </div>
                     </div>
                 </div>
@@ -216,7 +219,7 @@
                             </div>
                             <p class="hotel-address">四川省成都市锦江区中纱帽街8号</p>
                             <div class="hotel-price">¥1,688 <span>起/晚</span></div>
-                            <button class="btn btn-sm btn-outline-primary">查看详情</button>
+                            <button class="btn btn-sm btn-outline-primary view-details-btn">查看详情</button>
                         </div>
                     </div>
                 </div>

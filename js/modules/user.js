@@ -139,11 +139,13 @@ const userModule = {
         const userInfo = document.getElementById('userInfo');
         const loginRegister = document.getElementById('loginRegister');
         const usernameDisplay = document.getElementById('usernameDisplay');
+        const languageSelector = document.getElementById('languageSelector');
         
-        if (userInfo && loginRegister && usernameDisplay) {
+        if (userInfo && loginRegister && usernameDisplay && languageSelector) {
             usernameDisplay.textContent = username;
             userInfo.style.display = 'block';
             loginRegister.style.display = 'none';
+            languageSelector.style.display = 'none';
         }
     },
     
@@ -151,10 +153,12 @@ const userModule = {
     showLoginRegisterButtons() {
         const userInfo = document.getElementById('userInfo');
         const loginRegister = document.getElementById('loginRegister');
+        const languageSelector = document.getElementById('languageSelector');
         
-        if (userInfo && loginRegister) {
+        if (userInfo && loginRegister && languageSelector) {
             userInfo.style.display = 'none';
             loginRegister.style.display = 'flex';
+            languageSelector.style.display = 'block';
         }
     }
 };

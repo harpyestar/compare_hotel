@@ -1,9 +1,49 @@
 {
   "header": {
-    "title": "Hotel Booking System",
+    "title": "Just Do It",
+    "subtitle": "Domestic hotel price comparison platform, find the best price for you",
     "searchPlaceholder": "Enter city or hotel name",
     "selectDate": "Select dates",
-    "travelers": "2 travelers, 1 room"
+    "travelers": "2 travelers, 1 room",
+    "step1": "1. Select Destination",
+    "step2": "2. Select Dates",
+    "step3": "3. Browse Hotels",
+    "step4": "4. Compare Prices"
+  },
+  "search": {
+    "hotDestinations": "Popular Destinations"
+  },
+  "hotels": {
+    "title": "Popular Searched Hotels",
+    "subtitle": "Click on the hotels below to view details",
+    "hotSearch": "Popular Searches"
+  },
+  "platforms": {
+    "title": "Cooperation Platforms"
+  },
+  "guide": {
+    "title": "Welcome to Hotel Price Comparison Platform",
+    "intro": "This is a simple guide that will help you understand how to use our platform.",
+    "steps": {
+      "0": "Enter the city or hotel name you want to visit here, and we will provide you with relevant search suggestions.",
+      "1": "Click here to select your check-in and check-out dates, and we will recommend suitable hotels based on the dates.",
+      "2": "Click here to set the number of guests and rooms, including options for adults, children, and pets.",
+      "3": "You can click on the popular destinations here to start searching quickly, or directly enter the place you want to go.",
+      "4": "Browse the hotel list, view hotel prices, ratings, and detailed information, and select the hotel you like.",
+      "5": "After selecting multiple hotels, click here to compare their prices and facilities to help you make the best choice.",
+      "6": "Log in or register an account to save your search history and favorite hotels, and get personalized recommendations."
+    },
+    "complete": "Complete"
+  },
+  "guests": {
+    "title": "Guests & Rooms",
+    "adult": "Adults",
+    "child": "Children",
+    "room": "Rooms",
+    "pets": "Pets Allowed",
+    "petsDescription": "Show accommodations that welcome pets",
+    "reset": "Reset",
+    "apply": "Apply"
   },
   "footer": {
     "about": "About Us",
@@ -21,13 +61,22 @@
     "share": "Share",
     "language": "Language",
     "history": "Search History",
-    "compare": "Compare Hotels"
+    "compare": "Compare Hotels",
+    "viewDetails": "View Details",
+    "close": "Close",
+    "prev": "Previous",
+    "next": "Next"
   },
   "datepicker": {
-    "tonight": "Tonight",
-    "tomorrow": "Tomorrow",
-    "thisWeekend": "This Weekend",
-    "nextWeekend": "Next Weekend"
+    "quickButtons": {
+      "tonight": "Tonight",
+      "tomorrow": "Tomorrow",
+      "thisWeekend": "This Weekend",
+      "nextWeekend": "Next Weekend"
+    },
+    "weekdays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "dateFormat": "M/d"
   },
   "messages": {
     "welcome": "Welcome to Hotel Booking System",

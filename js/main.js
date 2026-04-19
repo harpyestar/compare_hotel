@@ -1,9 +1,8 @@
 /**
  * 主入口文件
  */
-import i18next from 'i18next';
-import Backend from 'i18next-http-backend';
-import LanguageDetector from 'i18next-browser-languagedetector';
+// 使用CDN加载的i18next
+// 导入模块
 import searchModule from './modules/search.js';
 import datepickerModule from './modules/datepicker.js';
 import guestsModule from './modules/guests.js';
@@ -13,8 +12,8 @@ import guideModule from './modules/guide.js';
 
 // 初始化i18next
 i18next
-  .use(Backend)
-  .use(LanguageDetector)
+  .use(i18nextHttpBackend)
+  .use(i18nextBrowserLanguageDetector)
   .init({
     fallbackLng: 'zh-CN',
     debug: false,
@@ -139,6 +138,11 @@ function initLanguageSwitch() {
 
 // 更新页面文本
 function updatePageText() {
+    // 清理日历实例，以便在打开时使用新的语言
+    if (typeof datepickerModule !== 'undefined' && datepickerModule.cleanup) {
+        datepickerModule.cleanup();
+    }
+    
     // 更新页面标题
     document.getElementById('pageTitle').textContent = t('header.title');
     
@@ -187,10 +191,155 @@ function updatePageText() {
         logoutBtn.textContent = t('buttons.logout');
     }
     
-    // 更新语言下拉菜单
+    // 更新语言下拉菜单，显示当前选中的语言
+    const getCurrentLanguageName = () => {
+        const lang = i18next.language;
+        if (lang === 'zh-CN') return '中文';
+        if (lang === 'en-US') return 'English';
+        return t('buttons.language');
+    };
+    
     const languageDropdown = document.getElementById('languageDropdown');
     if (languageDropdown) {
-        languageDropdown.innerHTML = `<i class="fas fa-globe mr-1"></i> ${t('buttons.language')}`;
+        languageDropdown.innerHTML = `<i class="fas fa-globe mr-1"></i> ${getCurrentLanguageName()}`;
+    }
+    
+    const languageDropdownUser = document.getElementById('languageDropdownUser');
+    if (languageDropdownUser) {
+        languageDropdownUser.innerHTML = `<i class="fas fa-globe mr-1"></i> ${getCurrentLanguageName()}`;
+    }
+    
+    // 更新页面标题和副标题
+    const headerTitle = document.getElementById('headerTitle');
+    if (headerTitle) {
+        headerTitle.textContent = t('header.title');
+    }
+    
+    const headerSubtitle = document.getElementById('headerSubtitle');
+    if (headerSubtitle) {
+        headerSubtitle.textContent = t('header.subtitle');
+    }
+    
+    // 更新步骤指示器
+    const step1 = document.getElementById('step1');
+    if (step1) {
+        step1.textContent = t('header.step1');
+    }
+    
+    const step2 = document.getElementById('step2');
+    if (step2) {
+        step2.textContent = t('header.step2');
+    }
+    
+    const step3 = document.getElementById('step3');
+    if (step3) {
+        step3.textContent = t('header.step3');
+    }
+    
+    const step4 = document.getElementById('step4');
+    if (step4) {
+        step4.textContent = t('header.step4');
+    }
+    
+    // 更新热门目的地
+    const hotDestinationsTitle = document.getElementById('hotDestinationsTitle');
+    if (hotDestinationsTitle) {
+        hotDestinationsTitle.textContent = t('search.hotDestinations');
+    }
+    
+    // 更新热门搜索酒店
+    const hotelsTitle = document.getElementById('hotelsTitle');
+    if (hotelsTitle) {
+        hotelsTitle.textContent = t('hotels.title');
+    }
+    
+    const hotelsSubtitle = document.getElementById('hotelsSubtitle');
+    if (hotelsSubtitle) {
+        hotelsSubtitle.textContent = t('hotels.subtitle');
+    }
+    
+    const hotSearchTitle = document.getElementById('hotSearchTitle');
+    if (hotSearchTitle) {
+        hotSearchTitle.textContent = t('hotels.hotSearch');
+    }
+    
+    // 更新合作平台
+    const platformsTitle = document.getElementById('platformsTitle');
+    if (platformsTitle) {
+        platformsTitle.textContent = t('platforms.title');
+    }
+    
+    // 更新查看详情按钮
+    const viewDetailsBtns = document.querySelectorAll('.view-details-btn');
+    viewDetailsBtns.forEach(btn => {
+        btn.textContent = t('buttons.viewDetails');
+    });
+    
+    // 更新向导
+    const guideTitle = document.getElementById('guideTitle');
+    if (guideTitle) {
+        guideTitle.textContent = t('guide.title');
+    }
+    
+    const guideContent = document.getElementById('guideContent');
+    if (guideContent) {
+        guideContent.textContent = t('guide.intro');
+    }
+    
+    const guideClose = document.getElementById('guideClose');
+    if (guideClose) {
+        guideClose.textContent = t('buttons.close');
+    }
+    
+    const guidePrev = document.getElementById('guidePrev');
+    if (guidePrev) {
+        guidePrev.textContent = t('buttons.prev');
+    }
+    
+    const guideNext = document.getElementById('guideNext');
+    if (guideNext) {
+        guideNext.textContent = t('buttons.next');
+    }
+    
+    // 更新人数与客房数目弹窗
+    const guestsModalLabel = document.getElementById('guestsModalLabel');
+    if (guestsModalLabel) {
+        guestsModalLabel.textContent = t('guests.title');
+    }
+    
+    const adultLabel = document.getElementById('adultLabel');
+    if (adultLabel) {
+        adultLabel.textContent = t('guests.adult');
+    }
+    
+    const childLabel = document.getElementById('childLabel');
+    if (childLabel) {
+        childLabel.textContent = t('guests.child');
+    }
+    
+    const roomLabel = document.getElementById('roomLabel');
+    if (roomLabel) {
+        roomLabel.textContent = t('guests.room');
+    }
+    
+    const petsLabel = document.getElementById('petsLabel');
+    if (petsLabel) {
+        petsLabel.textContent = t('guests.pets');
+    }
+    
+    const petsDescription = document.getElementById('petsDescription');
+    if (petsDescription) {
+        petsDescription.textContent = t('guests.petsDescription');
+    }
+    
+    const resetGuests = document.getElementById('resetGuests');
+    if (resetGuests) {
+        resetGuests.textContent = t('guests.reset');
+    }
+    
+    const applyGuests = document.getElementById('applyGuests');
+    if (applyGuests) {
+        applyGuests.textContent = t('guests.apply');
     }
     
     // 更新比较按钮

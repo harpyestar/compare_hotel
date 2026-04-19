@@ -1,6 +1,15 @@
 /**
  * 日期选择功能
  */
+// 使用默认值作为后备，确保即使i18next未初始化也能正常显示
+const getTranslation = (key, defaultValue) => {
+    if (typeof window.t === 'function') {
+        const translated = window.t(key);
+        return translated !== key ? translated : defaultValue;
+    }
+    return defaultValue;
+};
+
 const datepickerModule = {
     flatpickrInstance: null,
     handleOutsideClick: null,
@@ -34,8 +43,10 @@ const datepickerModule = {
         const dateDisplay = document.getElementById('dateDisplay');
         const dateBtn = document.getElementById('dateBtn');
 
-        if (this.flatpickrInstance) {
-            this.flatpickrInstance.open();
+        // 检查是否已经存在日历容器
+        const existingContainer = document.getElementById('datePickerContainer');
+        if (existingContainer) {
+            // 如果已经存在，直接返回
             return;
         }
 
@@ -60,6 +71,13 @@ const datepickerModule = {
 
         const calendarContainer = document.createElement('div');
         calendarContainer.id = 'calendarContainer';
+        // 移除固定高度，让内容自适应
+        calendarContainer.style.width = '100%';
+        calendarContainer.style.backgroundColor = '#f9f9f9';
+        calendarContainer.style.border = '1px solid #e5e5e5';
+        calendarContainer.style.borderRadius = '4px';
+        calendarContainer.style.padding = '10px';
+        console.log('Created calendar container:', calendarContainer);
         container.appendChild(calendarContainer);
 
         const buttonContainer = document.createElement('div');
@@ -70,10 +88,10 @@ const datepickerModule = {
         buttonContainer.style.borderTop = '1px solid #e5e5e5';
 
         const quickButtons = [
-            { text: '今晚', days: 0 },
-            { text: '明晚', days: 1 },
-            { text: '本周末', days: this.getDaysUntilWeekend() },
-            { text: '下周末', days: this.getDaysUntilWeekend() + 7 }
+            { text: getTranslation('datepicker.quickButtons.tonight', '今晚'), days: 0 },
+            { text: getTranslation('datepicker.quickButtons.tomorrow', '明晚'), days: 1 },
+            { text: getTranslation('datepicker.quickButtons.thisWeekend', '本周末'), days: this.getDaysUntilWeekend() },
+            { text: getTranslation('datepicker.quickButtons.nextWeekend', '下周末'), days: this.getDaysUntilWeekend() + 7 }
         ];
 
         quickButtons.forEach(btn => {
@@ -104,61 +122,90 @@ const datepickerModule = {
 
         // 添加点击外侧关闭的功能
         this.handleOutsideClick = (e) => {
-            if (!container.contains(e.target) && e.target !== dateBtn) {
-                if (container.parentNode) {
-                    container.parentNode.removeChild(container);
+            // 确保事件监听器只在容器存在时执行
+            const currentContainer = document.getElementById('datePickerContainer');
+            if (!currentContainer) {
+                document.removeEventListener('click', this.handleOutsideClick);
+                return;
+            }
+            
+            if (!currentContainer.contains(e.target) && e.target !== dateBtn) {
+                if (currentContainer.parentNode) {
+                    currentContainer.parentNode.removeChild(currentContainer);
                 }
                 this.flatpickrInstance = null;
                 document.removeEventListener('click', this.handleOutsideClick);
+                this.handleOutsideClick = null;
             }
         };
         
-        // 延迟添加事件监听器，避免立即触发
-        setTimeout(() => {
-            // 先移除可能存在的旧监听器
-            if (this.handleOutsideClick) {
-                document.removeEventListener('click', this.handleOutsideClick);
-            }
-            // 添加新的监听器
-            document.addEventListener('click', this.handleOutsideClick);
-        }, 100);
+        // 立即添加事件监听器，使用捕获模式确保事件被正确捕获
+        document.addEventListener('click', this.handleOutsideClick, true);
 
         const selectedDates = this.getSelectedDates();
-        const options = {
-            mode: 'range',
-            dateFormat: 'Y-m-d',
-            defaultDate: selectedDates.checkIn && selectedDates.checkOut ? [selectedDates.checkIn, selectedDates.checkOut] : null,
-            showMonths: 2,
-            inline: true,
-            monthSelectorType: 'static',
-            weekdayLabels: ['日', '一', '二', '三', '四', '五', '六'],
-            todayClass: 'today-highlight',
-            onClose: (selectedDates, dateStr, instance) => {
-                if (selectedDates.length === 2) {
-                    const checkInDate = selectedDates[0];
-                    const checkOutDate = selectedDates[1];
-                    const checkInStr = `${checkInDate.getMonth() + 1}月${checkInDate.getDate()}日`;
-                    const checkOutStr = `${checkOutDate.getMonth() + 1}月${checkOutDate.getDate()}日`;
-                    dateDisplay.textContent = `${checkInStr} - ${checkOutStr}`;
+        const currentLang = typeof i18next !== 'undefined' ? i18next.language : 'zh-CN';
+        const isEnglish = currentLang === 'en-US';
+
+        // 确保flatpickr存在
+        if (typeof flatpickr === 'function') {
+            try {
+                // 确保calendarContainer存在
+                if (calendarContainer) {
+                    // 根据当前语言设置locale
+                    const locale = isEnglish ? 'en' : 'zh';
+                    
+                    const simpleOptions = {
+                        mode: 'range',
+                        dateFormat: 'Y-m-d',
+                        defaultDate: selectedDates.checkIn && selectedDates.checkOut ? [selectedDates.checkIn, selectedDates.checkOut] : null,
+                        showMonths: 2,
+                        inline: true,
+                        monthSelectorType: 'static',
+                        todayClass: 'today-highlight',
+                        locale: locale,
+                        onClose: (selectedDates, dateStr, instance) => {
+                            if (selectedDates.length === 2) {
+                                const checkInDate = selectedDates[0];
+                                const checkOutDate = selectedDates[1];
+                                const dateFormat = getTranslation('datepicker.dateFormat', 'M月d日');
+                                const checkInStr = `${checkInDate.getMonth() + 1}${dateFormat.includes('月') ? '月' : '/'}${checkInDate.getDate()}${dateFormat.includes('日') ? '日' : ''}`;
+                                const checkOutStr = `${checkOutDate.getMonth() + 1}${dateFormat.includes('月') ? '月' : '/'}${checkOutDate.getDate()}${dateFormat.includes('日') ? '日' : ''}`;
+                                dateDisplay.textContent = `${checkInStr} - ${checkOutStr}`;
+                            }
+                            setTimeout(() => {
+                                if (container.parentNode) {
+                                    container.parentNode.removeChild(container);
+                                }
+                                this.flatpickrInstance = null;
+                            }, 100);
+                        }
+                    };
+                    
+                    console.log('Initializing flatpickr with locale:', locale);
+                    this.flatpickrInstance = flatpickr(calendarContainer, simpleOptions);
+                    console.log('flatpickr initialized successfully');
+                    // 移除固定高度，让内容自适应
+                } else {
+                    console.error('calendarContainer is not defined');
                 }
-                setTimeout(() => {
-                    if (container.parentNode) {
-                        container.parentNode.removeChild(container);
-                    }
-                    this.flatpickrInstance = null;
-                }, 100);
+            } catch (error) {
+                console.error('Error initializing flatpickr:', error);
+                // 添加错误提示
+                const errorDiv = document.createElement('div');
+                errorDiv.textContent = '日历加载失败，请刷新页面';
+                errorDiv.style.color = 'red';
+                errorDiv.style.padding = '10px';
+                container.appendChild(errorDiv);
             }
-        };
-
-        try {
-            if (flatpickr.l10ns.zh) {
-                options.locale = flatpickr.l10ns.zh;
-            }
-        } catch (e) {
-            console.log('Using default locale');
+        } else {
+            console.error('flatpickr is not loaded');
+            // 添加错误提示
+            const errorDiv = document.createElement('div');
+            errorDiv.textContent = '日历组件未加载，请刷新页面';
+            errorDiv.style.color = 'red';
+            errorDiv.style.padding = '10px';
+            container.appendChild(errorDiv);
         }
-
-        this.flatpickrInstance = flatpickr(calendarContainer, options);
     },
 
     selectQuickDate(daysFromNow) {
@@ -167,11 +214,14 @@ const datepickerModule = {
         const checkOut = new Date(checkIn);
         checkOut.setDate(checkOut.getDate() + 1);
 
-        this.flatpickrInstance.setDate([checkIn, checkOut], true);
+        if (this.flatpickrInstance) {
+            this.flatpickrInstance.setDate([checkIn, checkOut], true);
+        }
 
         const dateDisplay = document.getElementById('dateDisplay');
-        const checkInStr = `${checkIn.getMonth() + 1}月${checkIn.getDate()}日`;
-        const checkOutStr = `${checkOut.getMonth() + 1}月${checkOut.getDate()}日`;
+        const dateFormat = getTranslation('datepicker.dateFormat', 'M月d日');
+        const checkInStr = `${checkIn.getMonth() + 1}${dateFormat.includes('月') ? '月' : '/'}${checkIn.getDate()}${dateFormat.includes('日') ? '日' : ''}`;
+        const checkOutStr = `${checkOut.getMonth() + 1}${dateFormat.includes('月') ? '月' : '/'}${checkOut.getDate()}${dateFormat.includes('日') ? '日' : ''}`;
         dateDisplay.textContent = `${checkInStr} - ${checkOutStr}`;
 
         // 立即关闭日历控件
@@ -200,7 +250,7 @@ const datepickerModule = {
         const dateDisplay = document.getElementById('dateDisplay');
         if (!dateDisplay) return { checkIn: null, checkOut: null };
         const text = dateDisplay.textContent;
-        if (text === '选择日期' || !text.includes(' - ')) {
+        if (text === getTranslation('header.selectDate', '选择日期') || !text.includes(' - ')) {
             return { checkIn: null, checkOut: null };
         }
 
@@ -208,23 +258,58 @@ const datepickerModule = {
         if (parts.length !== 2) return { checkIn: null, checkOut: null };
 
         const parseDate = (dateStr) => {
-            const match = dateStr.match(/(\d+)月(\d+)日/);
-            if (!match) return null;
-            const month = parseInt(match[1]) - 1;
-            const day = parseInt(match[2]);
-            const date = new Date();
-            date.setMonth(month);
-            date.setDate(day);
-            if (month < date.getMonth()) {
-                date.setFullYear(date.getFullYear() + 1);
+            let match;
+            if (dateStr.includes('月') && dateStr.includes('日')) {
+                // 中文格式: 5月1日
+                match = dateStr.match(/(\d+)月(\d+)日/);
+                if (!match) return null;
+                const month = parseInt(match[1]) - 1;
+                const day = parseInt(match[2]);
+                const date = new Date();
+                date.setMonth(month);
+                date.setDate(day);
+                if (month < date.getMonth()) {
+                    date.setFullYear(date.getFullYear() + 1);
+                }
+                return date;
+            } else if (dateStr.includes('/')) {
+                // 英文格式: 5/1
+                match = dateStr.match(/(\d+)\/(\d+)/);
+                if (!match) return null;
+                const month = parseInt(match[1]) - 1;
+                const day = parseInt(match[2]);
+                const date = new Date();
+                date.setMonth(month);
+                date.setDate(day);
+                if (month < date.getMonth()) {
+                    date.setFullYear(date.getFullYear() + 1);
+                }
+                return date;
             }
-            return date;
+            return null;
         };
 
         const checkIn = parseDate(parts[0]);
         const checkOut = parseDate(parts[1]);
 
         return { checkIn, checkOut };
+    },
+
+    // 清理日历实例
+    cleanup() {
+        if (this.flatpickrInstance) {
+            this.flatpickrInstance.destroy();
+            this.flatpickrInstance = null;
+        }
+        if (this.handleOutsideClick) {
+            document.removeEventListener('click', this.handleOutsideClick);
+            this.handleOutsideClick = null;
+        }
+        // 移除日历容器
+        const container = document.getElementById('datePickerContainer');
+        if (container && container.parentNode) {
+            container.parentNode.removeChild(container);
+        }
     }
 };
 

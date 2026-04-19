@@ -97,7 +97,7 @@
             <div class="modal-body">
                 <div class="mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span>成人</span>
+                        <span id="adultLabel">成人</span>
                         <div class="d-flex align-items-center">
                             <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="adultMinus">-</button>
                             <input type="number" class="form-control w-16 text-center mx-2" id="adultCount" value="2" min="1" max="10">
@@ -105,7 +105,7 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span>儿童</span>
+                        <span id="childLabel">儿童</span>
                         <div class="d-flex align-items-center">
                             <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="childMinus">-</button>
                             <input type="number" class="form-control w-16 text-center mx-2" id="childCount" value="0" min="0" max="10">
@@ -113,7 +113,7 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <span>客房</span>
+                        <span id="roomLabel">客房</span>
                         <div class="d-flex align-items-center">
                             <button type="button" class="btn btn-outline-primary rounded-circle w-8 h-8 d-flex align-items-center justify-content-center" id="roomMinus">-</button>
                             <input type="number" class="form-control w-16 text-center mx-2" id="roomCount" value="1" min="1" max="10">
@@ -123,8 +123,8 @@
                     <hr>
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <span>可携带宠物</span>
-                            <p class="text-sm text-muted">显示欢迎宠物入住的住宿</p>
+                            <span id="petsLabel">可携带宠物</span>
+                            <p class="text-sm text-muted" id="petsDescription">显示欢迎宠物入住的住宿</p>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="petsAllowed">

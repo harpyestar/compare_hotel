@@ -58,32 +58,25 @@ const guideModule = {
     // 向导步骤
     steps: [
         {
-            element: '#destination',
-            content: '在这里输入您想要前往的城市或酒店名称，我们会为您提供相关的搜索建议。'
+            element: '#destination'
         },
         {
-            element: '#dateBtn',
-            content: '点击这里选择您的入住和离店日期，我们会根据日期为您推荐合适的酒店。'
+            element: '#dateBtn'
         },
         {
-            element: '#guestsBtn',
-            content: '点击这里设置入住人数和客房数量，包括成人、儿童和宠物选项。'
+            element: '#guestsBtn'
         },
         {
-            element: '.search-guide',
-            content: '您可以点击这里的热门目的地快速开始搜索，或者直接输入您想去的地方。'
+            element: '.search-guide'
         },
         {
-            element: '.hotel-card',
-            content: '浏览酒店列表，查看酒店的价格、评分和详细信息，选择您喜欢的酒店。'
+            element: '.hotel-card'
         },
         {
-            element: '.compare-btn',
-            content: '选择多个酒店后，点击这里可以比较它们的价格和设施，帮助您做出最佳选择。'
+            element: '.compare-btn'
         },
         {
-            element: '#loginRegister',
-            content: '登录或注册账号，保存您的搜索历史和收藏的酒店，获得个性化的推荐。'
+            element: '#loginRegister'
         }
     ],
     
@@ -142,12 +135,12 @@ const guideModule = {
         // 保存当前选择器
         this.currentElementSelector = step.element;
 
-        // 更新内容
-        guideContent.textContent = step.content;
+        // 更新内容 - 使用翻译函数
+        guideContent.textContent = window.t(`guide.steps.${stepIndex}`);
 
         // 更新按钮状态
         guidePrev.disabled = stepIndex === 0;
-        guideNext.textContent = stepIndex === this.steps.length - 1 ? '完成' : '下一步';
+        guideNext.textContent = stepIndex === this.steps.length - 1 ? window.t('guide.complete') : window.t('buttons.next');
 
         // 高亮元素 - 每次都更新位置
         this.updateHighlightPosition(element);
