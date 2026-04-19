@@ -2,7 +2,24 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const mysql = require('mysql2/promise');
+const i18next = require('i18next');
+const Backend = require('i18next-node-fs-backend');
+const middleware = require('i18next-express-middleware');
 const app = express();
+
+// 初始化i18next
+i18next
+  .use(Backend)
+  .init({
+    fallbackLng: 'zh-CN',
+    debug: false,
+    backend: {
+      loadPath: path.join(__dirname, '..', 'locales', '{{lng}}.json')
+    }
+  });
+
+// 使用i18next中间件
+app.use(middleware.handle(i18next));
 
 // 启用CORS
 app.use(cors());
@@ -225,11 +242,11 @@ app.post('/api/register', async (req, res) => {
         const { username, password } = req.body;
         
         if (!username || !password) {
-            return res.json({ success: false, message: '用户名和密码不能为空' });
+            return res.json({ success: false, message: req.t('messages.registerFailed') });
         }
         
         if (!dbConnected) {
-            return res.json({ success: false, message: '数据库连接失败，无法注册' });
+            return res.json({ success: false, message: req.t('messages.databaseError') });
         }
         
         // 使用数据库存储
@@ -250,7 +267,7 @@ app.post('/api/register', async (req, res) => {
             
             if (existingUsers.length > 0) {
                 await connection.end();
-                return res.json({ success: false, message: '用户名已存在' });
+                return res.json({ success: false, message: req.t('messages.usernameExists') });
             }
             
             // 创建新用户
@@ -277,11 +294,11 @@ app.post('/api/register', async (req, res) => {
             return res.json({ success: true, username, sessionId });
         } catch (error) {
             console.error('注册错误:', error);
-            return res.json({ success: false, message: '注册失败，请稍后重试' });
+            return res.json({ success: false, message: req.t('messages.registerFailed') });
         }
     } catch (error) {
         console.error('注册API错误:', error);
-        return res.json({ success: false, message: '注册失败，请稍后重试' });
+        return res.json({ success: false, message: req.t('messages.registerFailed') });
     }
 });
 
@@ -290,11 +307,11 @@ app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     
     if (!username || !password) {
-        return res.json({ success: false, message: '用户名和密码不能为空' });
+        return res.json({ success: false, message: req.t('messages.loginFailed') });
     }
     
     if (!dbConnected) {
-        return res.json({ success: false, message: '数据库连接失败，无法登录' });
+        return res.json({ success: false, message: req.t('messages.databaseError') });
     }
     
     // 使用数据库存储
@@ -310,7 +327,7 @@ app.post('/api/login', async (req, res) => {
         
         if (users.length === 0) {
             await connection.end();
-            return res.json({ success: false, message: '用户名或密码错误' });
+            return res.json({ success: false, message: req.t('messages.loginFailed') });
         }
         
         // 创建会话
@@ -326,7 +343,7 @@ app.post('/api/login', async (req, res) => {
         res.json({ success: true, username, sessionId });
     } catch (error) {
         console.error('登录错误:', error);
-        return res.json({ success: false, message: '登录失败，请稍后重试' });
+        return res.json({ success: false, message: req.t('messages.loginFailed') });
     }
 });
 
@@ -335,7 +352,7 @@ app.post('/api/logout', async (req, res) => {
     const sessionId = req.headers['authorization'];
     
     if (!dbConnected) {
-        return res.json({ success: false, message: '数据库连接失败，无法退出登录' });
+        return res.json({ success: false, message: req.t('messages.databaseError') });
     }
     
     // 使用数据库存储
@@ -356,7 +373,7 @@ app.post('/api/logout', async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error('退出登录错误:', error);
-        return res.json({ success: false, message: '退出登录失败，请稍后重试' });
+        return res.json({ success: false, message: req.t('messages.logoutFailed') });
     }
 });
 
@@ -365,7 +382,7 @@ app.get('/api/check-login', async (req, res) => {
     const sessionId = req.headers['authorization'];
     
     if (!dbConnected) {
-        return res.json({ loggedIn: false, message: '数据库连接失败' });
+        return res.json({ loggedIn: false, message: req.t('messages.databaseError') });
     }
     
     // 使用数据库存储
@@ -391,7 +408,7 @@ app.get('/api/check-login', async (req, res) => {
         res.json({ loggedIn: false });
     } catch (error) {
         console.error('检查登录状态错误:', error);
-        return res.json({ loggedIn: false, message: '检查登录状态失败' });
+        return res.json({ loggedIn: false, message: req.t('messages.loginCheckFailed') });
     }
 });
 
@@ -424,16 +441,16 @@ async function getUserFromSession(req) {
 app.post('/api/history', async (req, res) => {
     const username = await getUserFromSession(req);
     if (!username) {
-        return res.json({ success: false, message: '请先登录' });
+        return res.json({ success: false, message: req.t('messages.loginRequired') });
     }
     
     const { destination, checkIn, checkOut } = req.body;
     if (!destination || !checkIn || !checkOut) {
-        return res.json({ success: false, message: '搜索信息不完整' });
+        return res.json({ success: false, message: req.t('messages.searchInfoIncomplete') });
     }
     
     if (!dbConnected) {
-        return res.json({ success: false, message: '数据库连接失败，无法保存搜索历史' });
+        return res.json({ success: false, message: req.t('messages.databaseError') });
     }
     
     // 使用数据库存储
@@ -459,7 +476,7 @@ app.post('/api/history', async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error('保存搜索历史错误:', error);
-        return res.json({ success: false, message: '保存搜索历史失败，请稍后重试' });
+        return res.json({ success: false, message: req.t('messages.saveHistoryFailed') });
     }
 });
 
@@ -467,11 +484,11 @@ app.post('/api/history', async (req, res) => {
 app.get('/api/history', async (req, res) => {
     const username = await getUserFromSession(req);
     if (!username) {
-        return res.json({ success: false, message: '请先登录', history: [] });
+        return res.json({ success: false, message: req.t('messages.loginRequired'), history: [] });
     }
     
     if (!dbConnected) {
-        return res.json({ success: false, message: '数据库连接失败，无法获取搜索历史', history: [] });
+        return res.json({ success: false, message: req.t('messages.databaseError'), history: [] });
     }
     
     // 使用数据库存储
@@ -491,7 +508,7 @@ app.get('/api/history', async (req, res) => {
         res.json({ success: true, history });
     } catch (error) {
         console.error('获取搜索历史错误:', error);
-        return res.json({ success: false, message: '获取搜索历史失败，请稍后重试', history: [] });
+        return res.json({ success: false, message: req.t('messages.getHistoryFailed'), history: [] });
     }
 });
 
@@ -499,16 +516,16 @@ app.get('/api/history', async (req, res) => {
 app.post('/api/favorites', async (req, res) => {
     const username = await getUserFromSession(req);
     if (!username) {
-        return res.json({ success: false, message: '请先登录' });
+        return res.json({ success: false, message: req.t('messages.loginRequired') });
     }
     
     const hotel = req.body;
     if (!hotel.id || !hotel.name || !hotel.address || !hotel.price || !hotel.image) {
-        return res.json({ success: false, message: '酒店信息不完整' });
+        return res.json({ success: false, message: req.t('messages.hotelInfoIncomplete') });
     }
     
     if (!dbConnected) {
-        return res.json({ success: false, message: '数据库连接失败，无法收藏酒店' });
+        return res.json({ success: false, message: req.t('messages.databaseError') });
     }
     
     // 使用数据库存储
@@ -523,9 +540,9 @@ app.post('/api/favorites', async (req, res) => {
         );
         
         if (existingFavorites.length > 0) {
-            await connection.end();
-            return res.json({ success: false, message: '酒店已收藏' });
-        }
+                await connection.end();
+                return res.json({ success: false, message: req.t('messages.hotelAlreadyFavorited') });
+            }
         
         // 保存收藏
         await connection.execute(
@@ -539,7 +556,7 @@ app.post('/api/favorites', async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error('收藏酒店错误:', error);
-        return res.json({ success: false, message: '收藏酒店失败，请稍后重试' });
+        return res.json({ success: false, message: req.t('messages.favoriteFailed') });
     }
 });
 
@@ -547,11 +564,11 @@ app.post('/api/favorites', async (req, res) => {
 app.get('/api/favorites', async (req, res) => {
     const username = await getUserFromSession(req);
     if (!username) {
-        return res.json({ success: false, message: '请先登录', favorites: [] });
+        return res.json({ success: false, message: req.t('messages.loginRequired'), favorites: [] });
     }
     
     if (!dbConnected) {
-        return res.json({ success: false, message: '数据库连接失败，无法获取收藏酒店', favorites: [] });
+        return res.json({ success: false, message: req.t('messages.databaseError'), favorites: [] });
     }
     
     // 使用数据库存储
@@ -571,7 +588,7 @@ app.get('/api/favorites', async (req, res) => {
         res.json({ success: true, favorites });
     } catch (error) {
         console.error('获取收藏酒店错误:', error);
-        return res.json({ success: false, message: '获取收藏酒店失败，请稍后重试', favorites: [] });
+        return res.json({ success: false, message: req.t('messages.getFavoritesFailed'), favorites: [] });
     }
 });
 
@@ -579,13 +596,13 @@ app.get('/api/favorites', async (req, res) => {
 app.delete('/api/favorites/:id', async (req, res) => {
     const username = await getUserFromSession(req);
     if (!username) {
-        return res.json({ success: false, message: '请先登录' });
+        return res.json({ success: false, message: req.t('messages.loginRequired') });
     }
     
     const hotelId = req.params.id;
     
     if (!dbConnected) {
-        return res.json({ success: false, message: '数据库连接失败，无法取消收藏酒店' });
+        return res.json({ success: false, message: req.t('messages.databaseError') });
     }
     
     // 使用数据库存储
@@ -605,11 +622,11 @@ app.delete('/api/favorites/:id', async (req, res) => {
         if (result.affectedRows > 0) {
             res.json({ success: true });
         } else {
-            res.json({ success: false, message: '酒店未收藏' });
+            res.json({ success: false, message: req.t('messages.hotelNotFavorited') });
         }
     } catch (error) {
         console.error('取消收藏酒店错误:', error);
-        return res.json({ success: false, message: '取消收藏酒店失败，请稍后重试' });
+        return res.json({ success: false, message: req.t('messages.unfavoriteFailed') });
     }
 });
 

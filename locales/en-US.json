@@ -1,0 +1,72 @@
+{
+  "header": {
+    "title": "Hotel Booking System",
+    "searchPlaceholder": "Enter city or hotel name",
+    "selectDate": "Select dates",
+    "travelers": "2 travelers, 1 room"
+  },
+  "footer": {
+    "about": "About Us",
+    "contact": "Contact Us",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  },
+  "buttons": {
+    "search": "Search",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "bookNow": "Book Now",
+    "favorite": "Favorite",
+    "share": "Share",
+    "language": "Language",
+    "history": "Search History",
+    "compare": "Compare Hotels"
+  },
+  "datepicker": {
+    "tonight": "Tonight",
+    "tomorrow": "Tomorrow",
+    "thisWeekend": "This Weekend",
+    "nextWeekend": "Next Weekend"
+  },
+  "messages": {
+    "welcome": "Welcome to Hotel Booking System",
+    "loginSuccess": "Login successful",
+    "loginFailed": "Login failed, please check username and password",
+    "loginCheckFailed": "Failed to check login status",
+    "registerSuccess": "Registration successful",
+    "registerFailed": "Registration failed, please try again later",
+    "logoutSuccess": "Successfully logged out",
+    "logoutFailed": "Logout failed, please try again later",
+    "bookSuccess": "Booking successful",
+    "bookFailed": "Booking failed, please try again later",
+    "favoriteAdded": "Added to favorites",
+    "favoriteRemoved": "Removed from favorites",
+    "favoriteFailed": "Failed to favorite hotel, please try again later",
+    "getFavoritesFailed": "Failed to get favorite hotels, please try again later",
+    "unfavoriteFailed": "Failed to remove favorite, please try again later",
+    "hotelAlreadyFavorited": "Hotel already favorited",
+    "hotelNotFavorited": "Hotel not favorited",
+    "searchNoResults": "No hotels found matching your criteria",
+    "searchError": "Search failed, please try again later",
+    "searchInfoIncomplete": "Search information incomplete",
+    "saveHistoryFailed": "Failed to save search history, please try again later",
+    "getHistoryFailed": "Failed to get search history, please try again later",
+    "hotelInfoIncomplete": "Hotel information incomplete",
+    "databaseError": "Database connection failed",
+    "loginRequired": "Please login first",
+    "usernameExists": "Username already exists"
+  },
+  "labels": {
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "adults": "Adults",
+    "children": "Children",
+    "rooms": "Rooms",
+    "price": "Price",
+    "rating": "Rating",
+    "location": "Location",
+    "amenities": "Amenities",
+    "reviews": "Reviews"
+  }
+}

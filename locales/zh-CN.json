@@ -1,0 +1,72 @@
+{
+  "header": {
+    "title": "酒店预订系统",
+    "searchPlaceholder": "输入城市或酒店名称",
+    "selectDate": "选择日期",
+    "travelers": "2位旅客, 1间客房"
+  },
+  "footer": {
+    "about": "关于我们",
+    "contact": "联系我们",
+    "privacy": "隐私政策",
+    "terms": "使用条款"
+  },
+  "buttons": {
+    "search": "搜索",
+    "login": "登录",
+    "register": "注册",
+    "logout": "退出登录",
+    "bookNow": "立即预订",
+    "favorite": "收藏",
+    "share": "分享",
+    "language": "语言",
+    "history": "搜索历史",
+    "compare": "比较酒店"
+  },
+  "datepicker": {
+    "tonight": "今晚",
+    "tomorrow": "明晚",
+    "thisWeekend": "本周末",
+    "nextWeekend": "下周末"
+  },
+  "messages": {
+    "welcome": "欢迎使用酒店预订系统",
+    "loginSuccess": "登录成功",
+    "loginFailed": "登录失败，请检查用户名和密码",
+    "loginCheckFailed": "检查登录状态失败",
+    "registerSuccess": "注册成功",
+    "registerFailed": "注册失败，请稍后重试",
+    "logoutSuccess": "已成功退出登录",
+    "logoutFailed": "退出登录失败，请稍后重试",
+    "bookSuccess": "预订成功",
+    "bookFailed": "预订失败，请稍后重试",
+    "favoriteAdded": "已添加到收藏",
+    "favoriteRemoved": "已从收藏中移除",
+    "favoriteFailed": "收藏酒店失败，请稍后重试",
+    "getFavoritesFailed": "获取收藏酒店失败，请稍后重试",
+    "unfavoriteFailed": "取消收藏酒店失败，请稍后重试",
+    "hotelAlreadyFavorited": "酒店已收藏",
+    "hotelNotFavorited": "酒店未收藏",
+    "searchNoResults": "未找到符合条件的酒店",
+    "searchError": "搜索失败，请稍后重试",
+    "searchInfoIncomplete": "搜索信息不完整",
+    "saveHistoryFailed": "保存搜索历史失败，请稍后重试",
+    "getHistoryFailed": "获取搜索历史失败，请稍后重试",
+    "hotelInfoIncomplete": "酒店信息不完整",
+    "databaseError": "数据库连接失败",
+    "loginRequired": "请先登录",
+    "usernameExists": "用户名已存在"
+  },
+  "labels": {
+    "checkIn": "入住",
+    "checkOut": "离店",
+    "adults": "成人",
+    "children": "儿童",
+    "rooms": "客房",
+    "price": "价格",
+    "rating": "评分",
+    "location": "位置",
+    "amenities": "设施",
+    "reviews": "评论"
+  }
+}
