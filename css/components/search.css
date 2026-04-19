@@ -60,6 +60,22 @@
     margin-right: 10px;
 }
 
+.search-item:last-child i {
+    margin-right: 0;
+    font-size: 18px;
+    color: #ffffff;
+}
+
+.search-item:last-child .btn-primary {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    padding: 0;
+}
+
 /* 搜索建议样式 */
 #suggestions {
     max-height: 240px;

@@ -4,6 +4,8 @@
 
 // 向导功能
 const guideModule = {
+    boundUpdateHighlight: null,
+
     // 初始化向导功能
     init() {
         this.setupGuideButton();
@@ -87,63 +89,112 @@ const guideModule = {
     
     // 当前步骤
     currentStep: 0,
-    
+
+    // 当前元素选择器
+    currentElementSelector: null,
+
     // 开始向导
     startGuide() {
         const guideOverlay = document.getElementById('guideOverlay');
         const guideModal = document.getElementById('guideModal');
-        
+
         if (!guideOverlay || !guideModal) return;
-        
+
         guideOverlay.style.display = 'block';
         guideModal.style.display = 'block';
         this.showStep(0);
     },
-    
+
     // 关闭向导
     closeGuide() {
         const guideOverlay = document.getElementById('guideOverlay');
         const guideModal = document.getElementById('guideModal');
         const guideHighlight = document.getElementById('guideHighlight');
-        
+
         if (guideOverlay) guideOverlay.style.display = 'none';
         if (guideModal) guideModal.style.display = 'none';
         if (guideHighlight) guideHighlight.style.display = 'none';
-        
+
+        // 移除滚动监听
+        if (this.boundUpdateHighlight) {
+            window.removeEventListener('scroll', this.boundUpdateHighlight);
+            this.boundUpdateHighlight = null;
+        }
+
         this.currentStep = 0;
+        this.currentElementSelector = null;
     },
-    
+
     // 显示当前步骤
     showStep(stepIndex) {
         const guideContent = document.getElementById('guideContent');
         const guidePrev = document.getElementById('guidePrev');
         const guideNext = document.getElementById('guideNext');
         const guideHighlight = document.getElementById('guideHighlight');
-        
+
         if (!guideContent || !guidePrev || !guideNext || !guideHighlight) return;
-        
+
         const step = this.steps[stepIndex];
         const element = document.querySelector(step.element);
-        
+
         if (!element) return;
-        
+
+        // 保存当前选择器
+        this.currentElementSelector = step.element;
+
         // 更新内容
         guideContent.textContent = step.content;
-        
+
         // 更新按钮状态
         guidePrev.disabled = stepIndex === 0;
         guideNext.textContent = stepIndex === this.steps.length - 1 ? '完成' : '下一步';
-        
-        // 高亮元素
+
+        // 高亮元素 - 每次都更新位置
+        this.updateHighlightPosition(element);
+
+        // 移除之前的滚动监听
+        if (this.boundUpdateHighlight) {
+            window.removeEventListener('scroll', this.boundUpdateHighlight);
+        }
+        // 添加滚动监听，跟随目标元素
+        this.boundUpdateHighlight = this.updateHighlight.bind(this);
+        window.addEventListener('scroll', this.boundUpdateHighlight);
+
+        // 更新当前步骤
+        this.currentStep = stepIndex;
+    },
+
+    // 更新高亮位置
+    updateHighlightPosition(element) {
+        const guideHighlight = document.getElementById('guideHighlight');
+        if (!guideHighlight || !element) return;
+
         const rect = element.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) return;
+
         guideHighlight.style.display = 'block';
         guideHighlight.style.top = `${rect.top}px`;
         guideHighlight.style.left = `${rect.left}px`;
         guideHighlight.style.width = `${rect.width}px`;
         guideHighlight.style.height = `${rect.height}px`;
-        
-        // 更新当前步骤
-        this.currentStep = stepIndex;
+
+        // 如果元素不在可视区域内，自动滚动到中间
+        if (rect.top < 0 || rect.bottom > window.innerHeight) {
+            element.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest'
+            });
+        }
+    },
+
+    // 跟随滚动更新高亮 - 使用保存的选择器重新查找元素
+    updateHighlight() {
+        if (!this.currentElementSelector) return;
+        const element = document.querySelector(this.currentElementSelector);
+        if (element) {
+            this.updateHighlightPosition(element);
+        }
     },
     
     // 上一步
