@@ -430,3 +430,108 @@ body {
         #resetGuests {
             margin-right: 10px;
         }
+        /* flatpickr 日期选择器样式 */
+        #datePickerContainer {
+            width: 100% !important;
+            position: relative !important;
+        }
+        #datePickerContainer .flatpickr-calendar {
+            width: 100% !important;
+            border: 1px solid #e5e5e5 !important;
+            border-radius: 8px !important;
+            padding: 10px !important;
+            position: absolute !important;
+            z-index: 1000 !important;
+            background: white !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+        }
+        #datePickerContainer .flatpickr-days {
+            width: 100% !important;
+            border: 1px solid #e5e5e5 !important;
+            border-top: none !important;
+        }
+        #datePickerContainer .flatpickr-day {
+            border: 1px solid #e5e5e5 !important;
+            min-width: 36px !important;
+            height: 36px !important;
+            line-height: 34px !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            display: inline-block !important;
+        }
+        #datePickerContainer .flatpickr-weekdays {
+            border: 1px solid #e5e5e5 !important;
+            border-bottom: none !important;
+            margin-bottom: 0 !important;
+        }
+        #datePickerContainer .flatpickr-weekdays .flatpickr-weekday {
+            border: 1px solid #e5e5e5 !important;
+            border-bottom: none !important;
+            border-top: none !important;
+            box-sizing: border-box !important;
+            min-width: 36px !important;
+            padding: 8px 0 !important;
+            display: inline-block !important;
+        }
+        #datePickerContainer .flatpickr-weekdays .flatpickr-weekday:first-child {
+            border-left: none !important;
+        }
+        #datePickerContainer .flatpickr-weekdays .flatpickr-weekday:last-child {
+            border-right: none !important;
+        }
+        #datePickerContainer .flatpickr-months {
+            margin-bottom: 0 !important;
+        }
+        #datePickerContainer .flatpickr-months .flatpickr-month {
+            width: 50% !important;
+        }
+        #datePickerContainer .flatpickr-calendar.animate.in {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+        #datePickerContainer .flatpickr-day.selected {
+            background: #667eea !important;
+            color: white !important;
+        }
+        #datePickerContainer .flatpickr-day.selected.startRange {
+            border-radius: 4px 0 0 4px !important;
+        }
+        #datePickerContainer .flatpickr-day.selected.endRange {
+            border-radius: 0 4px 4px 0 !important;
+        }
+        #datePickerContainer .flatpickr-day.selected.inRange {
+            border-radius: 0 !important;
+        }
+        /* 修复双月视图的边框问题 */
+        #datePickerContainer .flatpickr-calendar .flatpickr-days {
+            display: block !important;
+        }
+        #datePickerContainer .flatpickr-calendar .flatpickr-week {
+            display: block !important;
+            width: 100% !important;
+        }
+        #datePickerContainer .flatpickr-calendar .flatpickr-week .flatpickr-day {
+            width: 14.2857% !important;
+            text-align: center !important;
+        }
+        /* 确保所有日期单元格都有边框 */
+        #datePickerContainer .flatpickr-day.prevMonthDay,
+        #datePickerContainer .flatpickr-day.nextMonthDay,
+        #datePickerContainer .flatpickr-day.today,
+        #datePickerContainer .flatpickr-day:hover {
+            border: 1px solid #e5e5e5 !important;
+        }
+        /* 修复表格边框问题 */
+        #datePickerContainer .flatpickr-week {
+            border-bottom: 1px solid #e5e5e5 !important;
+        }
+        #datePickerContainer .flatpickr-week:last-child {
+            border-bottom: none !important;
+        }
+        #datePickerContainer .flatpickr-day:first-child {
+            border-left: 1px solid #e5e5e5 !important;
+        }
+        #datePickerContainer .flatpickr-day:last-child {
+            border-right: 1px solid #e5e5e5 !important;
+        }

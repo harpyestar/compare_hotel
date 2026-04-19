@@ -3,6 +3,7 @@
  */
 const datepickerModule = {
     flatpickrInstance: null,
+    handleOutsideClick: null,
 
     init() {
         this.setupDatePicker();
@@ -41,9 +42,10 @@ const datepickerModule = {
         const rect = dateBtn.getBoundingClientRect();
         const container = document.createElement('div');
         container.id = 'datePickerContainer';
-        container.style.position = 'fixed';
-        container.style.top = `${rect.bottom + 10}px`;
-        container.style.left = `${rect.left}px`;
+        container.style.position = 'absolute';
+        container.style.top = '100%';
+        container.style.left = '0';
+        container.style.marginTop = '10px';
         container.style.zIndex = '10001';
         container.style.backgroundColor = 'white';
         container.style.border = '1px solid #e5e5e5';
@@ -51,7 +53,10 @@ const datepickerModule = {
         container.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
         container.style.padding = '16px';
         container.style.minWidth = '400px';
-        document.body.appendChild(container);
+        
+        // 确保日期选择器容器相对于dateBtn定位
+        dateBtn.style.position = 'relative';
+        dateBtn.appendChild(container);
 
         const calendarContainer = document.createElement('div');
         calendarContainer.id = 'calendarContainer';
@@ -88,13 +93,35 @@ const datepickerModule = {
             button.addEventListener('mouseleave', () => {
                 button.style.backgroundColor = 'white';
             });
-            button.addEventListener('click', () => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation(); // 阻止事件冒泡
                 this.selectQuickDate(btn.days);
             });
             buttonContainer.appendChild(button);
         });
 
         container.appendChild(buttonContainer);
+
+        // 添加点击外侧关闭的功能
+        this.handleOutsideClick = (e) => {
+            if (!container.contains(e.target) && e.target !== dateBtn) {
+                if (container.parentNode) {
+                    container.parentNode.removeChild(container);
+                }
+                this.flatpickrInstance = null;
+                document.removeEventListener('click', this.handleOutsideClick);
+            }
+        };
+        
+        // 延迟添加事件监听器，避免立即触发
+        setTimeout(() => {
+            // 先移除可能存在的旧监听器
+            if (this.handleOutsideClick) {
+                document.removeEventListener('click', this.handleOutsideClick);
+            }
+            // 添加新的监听器
+            document.addEventListener('click', this.handleOutsideClick);
+        }, 100);
 
         const selectedDates = this.getSelectedDates();
         const options = {
@@ -147,11 +174,18 @@ const datepickerModule = {
         const checkOutStr = `${checkOut.getMonth() + 1}月${checkOut.getDate()}日`;
         dateDisplay.textContent = `${checkInStr} - ${checkOutStr}`;
 
+        // 立即关闭日历控件
         const container = document.getElementById('datePickerContainer');
         if (container && container.parentNode) {
             container.parentNode.removeChild(container);
         }
+        
+        // 清理实例和事件监听器
         this.flatpickrInstance = null;
+        if (this.handleOutsideClick) {
+            document.removeEventListener('click', this.handleOutsideClick);
+            this.handleOutsideClick = null;
+        }
     },
 
     getDaysUntilWeekend() {

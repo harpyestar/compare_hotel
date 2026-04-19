@@ -615,15 +615,22 @@ app.delete('/api/favorites/:id', async (req, res) => {
 
 // 静态文件服务
 const staticPath = path.join(__dirname, '..');
+console.log('静态文件路径:', staticPath);
 app.use(express.static(staticPath));
 
 // 根路径重定向到index.html
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'index.html'));
+    const indexPath = path.join(__dirname, '..', 'index.html');
+    console.log('Index.html路径:', indexPath);
+    res.sendFile(indexPath);
 });
 
 // 启动服务器
 const port = 3000;
-app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
-});
+try {
+    app.listen(port, () => {
+        console.log(`Server running on http://localhost:${port}`);
+    });
+} catch (error) {
+    console.error('服务器启动错误:', error);
+}
