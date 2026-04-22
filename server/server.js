@@ -175,15 +175,7 @@ async function initDatabase() {
         `);
         console.log('会话表创建成功');
         
-        // 尝试删除旧表（如果存在）
-        try {
-            await connection.execute('DROP TABLE IF EXISTS search_history');
-            console.log('旧搜索历史表已删除');
-        } catch (error) {
-            console.log('删除旧表失败:', error);
-        }
-        
-        // 创建新的搜索历史表
+        // 创建搜索历史表（如果不存在）
         await connection.execute(`
             CREATE TABLE IF NOT EXISTS search_history (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -198,7 +190,8 @@ async function initDatabase() {
                 FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
             )
         `);
-        console.log('新搜索历史表创建成功');
+        console.log('搜索历史表创建成功');
+
         
         // 创建收藏酒店表
         await connection.execute(`

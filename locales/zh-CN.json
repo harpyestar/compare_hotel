@@ -2,7 +2,8 @@
   "header": {
     "title": "智慧酒店预订",
     "subtitle": "更智能的平台，为您找到最优惠的价格",
-    "searchPlaceholder": "输入城市或酒店名称",
+    "cityPlaceholder": "输入城市",
+    "hotelPlaceholder": "输入酒店名称（可选）",
     "selectDate": "选择日期",
     "travelers": "2位旅客, 1间客房",
     "step1": "1. 输入目的地",
@@ -16,7 +17,9 @@
   "hotels": {
     "title": "精选酒店",
     "subtitle": "发现最适合您入住的酒店",
-    "hotSearch": "热门搜索"
+    "hotSearch": "热门搜索",
+    "searchByHotel": "根据酒店搜索",
+    "searchByCity": "根据城市搜索"
   },
   "platforms": {
     "title": "合作平台"

@@ -202,71 +202,40 @@ function initSearchOptions() {
 // 初始化搜索表单提交
 function initSearchForm() {
     const searchForm = document.getElementById('searchForm');
-    const destinationInput = document.getElementById('destination');
+    const cityInput = document.getElementById('city');
+    const hotelInput = document.getElementById('hotel');
     const dateDisplay = document.getElementById('dateDisplay');
     const guestsDisplay = document.getElementById('guestsDisplay');
     const searchTypeInput = document.getElementById('searchType');
     
-    if (!searchForm || !destinationInput || !dateDisplay || !guestsDisplay) return;
+    if (!searchForm || !cityInput || !dateDisplay || !guestsDisplay) return;
     
     // 处理搜索表单提交
     searchForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        const destination = destinationInput.value.trim();
+        const city = cityInput.value.trim();
+        const hotel = hotelInput.value.trim();
         const dateText = dateDisplay.textContent.trim();
         const guestsText = guestsDisplay.textContent.trim();
         
-        // 自动判断搜索类型
-        let searchType = searchTypeInput ? searchTypeInput.value : 'city';
-        console.log('Initial searchType:', searchType);
-        console.log('Destination:', destination);
-        
-        // 根据输入内容自动判断是城市还是酒店
-        // 检查是否包含酒店相关关键词
-        if (destination.includes('酒店') || destination.includes('饭店') || destination.includes('宾馆') || 
-            destination.includes('Hotel') || destination.includes('Motel') || destination.includes('Inn') ||
-            destination.includes('Resort') || destination.includes('Suite') || destination.includes('Villa')) {
+        // 确定搜索类型
+        let searchType = 'city';
+        if (hotel) {
             searchType = 'hotel';
-            // 更新搜索类型输入框的值
-            if (searchTypeInput) {
-                searchTypeInput.value = 'hotel';
-            }
-            console.log('Updated searchType to hotel');
-        } 
-        // 检查是否是已知的酒店名称
-        else if (destination.includes('丽思卡尔顿') || destination.includes('香格里拉') || destination.includes('希尔顿') ||
-                 destination.includes('万豪') || destination.includes('洲际') || destination.includes('凯悦') ||
-                 destination.includes('喜来登') || destination.includes('四季') || destination.includes('半岛')) {
-            searchType = 'hotel';
-            // 更新搜索类型输入框的值
-            if (searchTypeInput) {
-                searchTypeInput.value = 'hotel';
-            }
-            console.log('Updated searchType to hotel (known hotel chain)');
-        } 
-        // 特别处理"上海大酒店"等情况
-        else if (destination.includes('大酒店')) {
-            searchType = 'hotel';
-            // 更新搜索类型输入框的值
-            if (searchTypeInput) {
-                searchTypeInput.value = 'hotel';
-            }
-            console.log('Updated searchType to hotel (contains "大酒店")');
-        } else {
-            // 默认为城市类型
-            searchType = 'city';
-            // 更新搜索类型输入框的值
-            if (searchTypeInput) {
-                searchTypeInput.value = 'city';
-            }
-            console.log('Updated searchType to city');
         }
         
-        console.log('Final searchType:', searchType);
+        // 更新搜索类型输入框的值
+        if (searchTypeInput) {
+            searchTypeInput.value = searchType;
+        }
         
-        if (!destination) {
-            alert('请输入目的地');
+        console.log('Search type:', searchType);
+        console.log('City:', city);
+        console.log('Hotel:', hotel);
+        
+        if (!city) {
+            alert('请输入城市');
             return;
         }
         
@@ -313,36 +282,19 @@ function initSearchForm() {
             return;
         }
         
-        // 解析城市和酒店信息
-        let city = null;
-        let hotel = null;
-        
-        // 根据搜索类型和内容解析
-        if (searchType === 'city') {
-            city = destination;
-        } else if (searchType === 'hotel') {
-            hotel = destination;
-            // 尝试从酒店名称中提取城市
-            const cityMatch = destination.match(/^(北京|上海|广州|深圳|杭州|成都|重庆|三亚)/);
-            if (cityMatch) {
-                city = cityMatch[1];
-            }
-        }
+        // 构建目的地字符串
+        const destination = hotel ? `${city} ${hotel}` : city;
         
         // 保存搜索历史
         console.log('Saving search history with type:', searchType);
         try {
-            // 确保searchType有值
-            const finalType = searchType || 'city';
-            console.log('Final type to send to server:', finalType);
-            
             const response = await fetch('/api/history', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': localStorage.getItem('sessionId')
                 },
-                body: JSON.stringify({ destination, checkIn, checkOut, type: finalType, city, hotel })
+                body: JSON.stringify({ destination, checkIn, checkOut, type: searchType, city, hotel })
             });
             
             const result = await response.json();
@@ -356,7 +308,11 @@ function initSearchForm() {
         }
         
         // 执行搜索
-        alert(`搜索: ${destination}, 日期: ${checkIn} 至 ${checkOut}, 类型: ${searchType}`);
+        if (hotel) {
+            alert(`搜索: ${city} ${hotel}, 日期: ${checkIn} 至 ${checkOut}`);
+        } else {
+            alert(`搜索: ${city}, 日期: ${checkIn} 至 ${checkOut}`);
+        }
         // 这里可以添加实际的搜索逻辑
     });
 }
@@ -395,6 +351,9 @@ function updateHotelList(hotels) {
         // 生成酒店列表
         let hotelHTML = '';
         hotels.forEach((hotel, index) => {
+            // 使用酒店名称作为关键词生成相关图片
+            const hotelKeyword = encodeURIComponent(hotel.name);
+            const prompt = encodeURIComponent(`modern hotel exterior, luxury building, city view`);
             hotelHTML += `
                 <div class="col-md-4">
                     <div class="hotel-card">
@@ -402,13 +361,13 @@ function updateHotelList(hotels) {
                             <input type="checkbox" class="form-check-input" id="hotel${index + 1}">
                         </div>
                         <div class="hotel-image">
-                            <img src="https://via.placeholder.com/400x300?text=${encodeURIComponent(hotel.name)}" alt="${hotel.name}">
+                            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${prompt}&image_size=landscape_4_3" alt="${hotel.name}">
                             <div class="hotel-rating">4.5</div>
                         </div>
                         <div class="hotel-info">
                             <div class="d-flex justify-content-between align-items-start">
                                 <h3 class="hotel-name">${hotel.name}</h3>
-                                <button class="btn btn-sm btn-outline-danger favorite-btn" data-hotel-id="${index + 1}" data-hotel-name="${hotel.name}" data-hotel-address="" data-hotel-price="0" data-hotel-image="https://via.placeholder.com/400x300?text=${encodeURIComponent(hotel.name)}">
+                                <button class="btn btn-sm btn-outline-danger favorite-btn" data-hotel-id="${index + 1}" data-hotel-name="${hotel.name}" data-hotel-address="" data-hotel-price="0" data-hotel-image="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${prompt}&image_size=landscape_4_3">
                                     <i class="far fa-heart"></i>
                                 </button>
                             </div>
@@ -446,9 +405,12 @@ function updateCityList(cities) {
                 <div class="city-grid">
         `;
         cities.forEach((city, index) => {
+            // 使用城市名称作为关键词生成相关风景图片
+            const cityKeyword = encodeURIComponent(city.name);
+            const prompt = encodeURIComponent(`${city.name} city landscape, scenic view, beautiful`);
             cityHTML += `
                 <div class="city-item">
-                    <img src="https://via.placeholder.com/200x150?text=${encodeURIComponent(city.name)}" alt="${city.name}">
+                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${prompt}&image_size=landscape_4_3" alt="${city.name}">
                     <h4>${city.name}</h4>
                     <p class="text-sm text-muted">搜索次数: ${city.count}</p>
                 </div>
@@ -494,9 +456,14 @@ function updatePageText() {
     document.getElementById('pageTitle').textContent = t('header.title');
     
     // 更新搜索框占位符
-    const destinationInput = document.getElementById('destination');
-    if (destinationInput) {
-        destinationInput.placeholder = t('header.searchPlaceholder');
+    const cityInput = document.getElementById('city');
+    if (cityInput) {
+        cityInput.placeholder = t('header.cityPlaceholder');
+    }
+
+    const hotelInput = document.getElementById('hotel');
+    if (hotelInput) {
+        hotelInput.placeholder = t('header.hotelPlaceholder');
     }
     
     // 更新日期选择按钮 - 只在显示默认文本时更新
@@ -608,6 +575,16 @@ function updatePageText() {
     const hotSearchTitle = document.getElementById('hotSearchTitle');
     if (hotSearchTitle) {
         hotSearchTitle.textContent = t('hotels.hotSearch');
+    }
+
+    const searchByHotelBtn = document.getElementById('searchByHotel');
+    if (searchByHotelBtn) {
+        searchByHotelBtn.textContent = t('hotels.searchByHotel');
+    }
+
+    const searchByCityBtn = document.getElementById('searchByCity');
+    if (searchByCityBtn) {
+        searchByCityBtn.textContent = t('hotels.searchByCity');
     }
     
     // 更新合作平台
