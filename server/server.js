@@ -175,19 +175,30 @@ async function initDatabase() {
         `);
         console.log('会话表创建成功');
         
-        // 创建搜索历史表
+        // 尝试删除旧表（如果存在）
+        try {
+            await connection.execute('DROP TABLE IF EXISTS search_history');
+            console.log('旧搜索历史表已删除');
+        } catch (error) {
+            console.log('删除旧表失败:', error);
+        }
+        
+        // 创建新的搜索历史表
         await connection.execute(`
             CREATE TABLE IF NOT EXISTS search_history (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(50) NOT NULL,
                 destination VARCHAR(100) NOT NULL,
+                city VARCHAR(50) NULL,
+                hotel VARCHAR(100) NULL,
+                type ENUM('hotel', 'city') NOT NULL DEFAULT 'city',
                 check_in DATE NOT NULL,
                 check_out DATE NOT NULL,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
             )
         `);
-        console.log('搜索历史表创建成功');
+        console.log('新搜索历史表创建成功');
         
         // 创建收藏酒店表
         await connection.execute(`
@@ -444,7 +455,7 @@ app.post('/api/history', async (req, res) => {
         return res.json({ success: false, message: req.t('messages.loginRequired') });
     }
     
-    const { destination, checkIn, checkOut } = req.body;
+    const { destination, checkIn, checkOut, type, city, hotel } = req.body;
     if (!destination || !checkIn || !checkOut) {
         return res.json({ success: false, message: req.t('messages.searchInfoIncomplete') });
     }
@@ -459,9 +470,13 @@ app.post('/api/history', async (req, res) => {
         const connection = await mysql.createConnection(dbConfig);
         
         // 保存搜索历史
+        console.log('Received search type from client:', type);
+        const finalType = type === 'hotel' ? 'hotel' : 'city';
+        console.log('Final type to save:', finalType);
+        
         await connection.execute(
-            'INSERT INTO search_history (username, destination, check_in, check_out) VALUES (?, ?, ?, ?)',
-            [username, destination, checkIn, checkOut]
+            'INSERT INTO search_history (username, destination, city, hotel, type, check_in, check_out) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [username, destination, city || null, hotel || null, finalType, checkIn, checkOut]
         );
         
         // 限制历史记录数量
@@ -627,6 +642,72 @@ app.delete('/api/favorites/:id', async (req, res) => {
     } catch (error) {
         console.error('取消收藏酒店错误:', error);
         return res.json({ success: false, message: req.t('messages.unfavoriteFailed') });
+    }
+});
+
+// 获取热门酒店搜索API
+app.get('/api/hot-hotels', async (req, res) => {
+    if (!dbConnected) {
+        return res.json({ success: false, message: req.t('messages.databaseError'), hotels: [] });
+    }
+    
+    try {
+        // 创建数据库连接
+        const connection = await mysql.createConnection(dbConfig);
+        
+        // 获取热门酒店搜索，按搜索次数降序排列
+        const [hotels] = await connection.execute(
+            `SELECT 
+                COALESCE(hotel, destination) as name, 
+                COUNT(*) as count 
+            FROM search_history 
+            WHERE type = ? AND (hotel IS NOT NULL OR destination LIKE '%酒店%' OR destination LIKE '%饭店%' OR destination LIKE '%宾馆%') 
+            GROUP BY COALESCE(hotel, destination) 
+            ORDER BY count DESC 
+            LIMIT 10`,
+            ['hotel']
+        );
+        
+        // 关闭连接
+        await connection.end();
+        
+        res.json({ success: true, hotels });
+    } catch (error) {
+        console.error('获取热门酒店搜索错误:', error);
+        return res.json({ success: false, message: req.t('messages.getHotHotelsFailed'), hotels: [] });
+    }
+});
+
+// 获取热门城市搜索API
+app.get('/api/hot-cities', async (req, res) => {
+    if (!dbConnected) {
+        return res.json({ success: false, message: req.t('messages.databaseError'), cities: [] });
+    }
+    
+    try {
+        // 创建数据库连接
+        const connection = await mysql.createConnection(dbConfig);
+        
+        // 获取热门城市搜索，按搜索次数降序排列
+        const [cities] = await connection.execute(
+            `SELECT 
+                COALESCE(city, destination) as name, 
+                COUNT(*) as count 
+            FROM search_history 
+            WHERE type = ? AND (city IS NOT NULL OR (destination NOT LIKE '%酒店%' AND destination NOT LIKE '%饭店%' AND destination NOT LIKE '%宾馆%')) 
+            GROUP BY COALESCE(city, destination) 
+            ORDER BY count DESC 
+            LIMIT 10`,
+            ['city']
+        );
+        
+        // 关闭连接
+        await connection.end();
+        
+        res.json({ success: true, cities });
+    } catch (error) {
+        console.error('获取热门城市搜索错误:', error);
+        return res.json({ success: false, message: req.t('messages.getHotCitiesFailed'), cities: [] });
     }
 });
 

@@ -73,18 +73,13 @@
             <div class="search-guide mb-5">
                 <h5 id="hotSearchTitle">热门搜索</h5>
                 <div class="guide-items">
-                    <span class="guide-item">北京酒店</span>
-                    <span class="guide-item">上海酒店</span>
-                    <span class="guide-item">广州酒店</span>
-                    <span class="guide-item">深圳酒店</span>
-                    <span class="guide-item">杭州酒店</span>
-                    <span class="guide-item">成都酒店</span>
-                    <span class="guide-item">重庆酒店</span>
-                    <span class="guide-item">三亚酒店</span>
+                    <button class="guide-item active" id="searchByHotel">根据酒店搜索</button>
+                    <button class="guide-item" id="searchByCity">根据城市搜索</button>
                 </div>
             </div>
             
-            <div class="row">
+            <!-- 酒店列表容器 -->
+            <div id="hotelList" class="row">
                 <!-- 酒店1 -->
                 <div class="col-md-4">
                     <div class="hotel-card">
@@ -220,6 +215,46 @@
                             <p class="hotel-address">四川省成都市锦江区中纱帽街8号</p>
                             <div class="hotel-price">¥1,688 <span>起/晚</span></div>
                             <button class="btn btn-sm btn-outline-primary view-details-btn">查看详情</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 城市列表容器 -->
+            <div id="cityList" class="row" style="display: none;">
+                <div class="col-md-12">
+                    <div class="city-grid">
+                        <div class="city-item">
+                            <img src="https://via.placeholder.com/200x150?text=北京" alt="北京">
+                            <h4>北京</h4>
+                        </div>
+                        <div class="city-item">
+                            <img src="https://via.placeholder.com/200x150?text=上海" alt="上海">
+                            <h4>上海</h4>
+                        </div>
+                        <div class="city-item">
+                            <img src="https://via.placeholder.com/200x150?text=广州" alt="广州">
+                            <h4>广州</h4>
+                        </div>
+                        <div class="city-item">
+                            <img src="https://via.placeholder.com/200x150?text=深圳" alt="深圳">
+                            <h4>深圳</h4>
+                        </div>
+                        <div class="city-item">
+                            <img src="https://via.placeholder.com/200x150?text=杭州" alt="杭州">
+                            <h4>杭州</h4>
+                        </div>
+                        <div class="city-item">
+                            <img src="https://via.placeholder.com/200x150?text=成都" alt="成都">
+                            <h4>成都</h4>
+                        </div>
+                        <div class="city-item">
+                            <img src="https://via.placeholder.com/200x150?text=重庆" alt="重庆">
+                            <h4>重庆</h4>
+                        </div>
+                        <div class="city-item">
+                            <img src="https://via.placeholder.com/200x150?text=三亚" alt="三亚">
+                            <h4>三亚</h4>
                         </div>
                     </div>
                 </div>

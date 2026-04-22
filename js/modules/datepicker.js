@@ -213,14 +213,15 @@ const datepickerModule = {
                         inline: true,
                         monthSelectorType: 'static',
                         todayClass: 'today-highlight',
+                        minDate: 'today',
                         locale: locale,
                         onClose: (selectedDates, dateStr, instance) => {
                             if (selectedDates.length === 2) {
                                 const checkInDate = selectedDates[0];
                                 const checkOutDate = selectedDates[1];
-                                const dateFormat = getTranslation('datepicker.dateFormat', 'M月d日');
-                                const checkInStr = `${checkInDate.getMonth() + 1}${dateFormat.includes('月') ? '月' : '/'}${checkInDate.getDate()}${dateFormat.includes('日') ? '日' : ''}`;
-                                const checkOutStr = `${checkOutDate.getMonth() + 1}${dateFormat.includes('月') ? '月' : '/'}${checkOutDate.getDate()}${dateFormat.includes('日') ? '日' : ''}`;
+                                const dateFormat = getTranslation('datepicker.dateFormat', 'YYYY年M月d日');
+                                const checkInStr = `${checkInDate.getFullYear()}年${checkInDate.getMonth() + 1}月${checkInDate.getDate()}日`;
+                                const checkOutStr = `${checkOutDate.getFullYear()}年${checkOutDate.getMonth() + 1}月${checkOutDate.getDate()}日`;
                                 dateDisplay.textContent = `${checkInStr} - ${checkOutStr}`;
                             }
                             setTimeout(() => {
@@ -270,9 +271,8 @@ const datepickerModule = {
         }
 
         const dateDisplay = document.getElementById('dateDisplay');
-        const dateFormat = getTranslation('datepicker.dateFormat', 'M月d日');
-        const checkInStr = `${checkIn.getMonth() + 1}${dateFormat.includes('月') ? '月' : '/'}${checkIn.getDate()}${dateFormat.includes('日') ? '日' : ''}`;
-        const checkOutStr = `${checkOut.getMonth() + 1}${dateFormat.includes('月') ? '月' : '/'}${checkOut.getDate()}${dateFormat.includes('日') ? '日' : ''}`;
+        const checkInStr = `${checkIn.getFullYear()}年${checkIn.getMonth() + 1}月${checkIn.getDate()}日`;
+        const checkOutStr = `${checkOut.getFullYear()}年${checkOut.getMonth() + 1}月${checkOut.getDate()}日`;
         dateDisplay.textContent = `${checkInStr} - ${checkOutStr}`;
 
         // 立即关闭日历控件

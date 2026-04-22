@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">酒店详情 - 干就完了</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components/header.css">
+    <link rel="stylesheet" href="css/components/footer.css">
+    <style>
+        .hotel-detail {
+            padding: 30px 0;
+        }
+        .hotel-gallery {
+            margin-bottom: 30px;
+        }
+        .hotel-gallery img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+        .hotel-info-detail {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .hotel-amenities {
+            margin-top: 30px;
+        }
+        .amenity-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .amenity-item i {
+            margin-right: 10px;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部区域 -->
+    <div id="header"></div>
+
+    <!-- 酒店详情区域 -->
+    <div class="hotel-detail">
+        <div class="container">
+            <div class="row">
+                <!-- 酒店图片 -->
+                <div class="col-md-6">
+                    <div class="hotel-gallery">
+                        <img id="hotelImage" src="" alt="酒店图片">
+                    </div>
+                </div>
+                <!-- 酒店信息 -->
+                <div class="col-md-6">
+                    <div class="hotel-info-detail">
+                        <h1 id="hotelName">酒店名称</h1>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="hotel-rating bg-warning text-white px-2 py-1 rounded mr-2">
+                                <i class="fas fa-star"></i> <span id="hotelRating">4.8</span>
+                            </div>
+                            <span id="hotelAddress">酒店地址</span>
+                        </div>
+                        <div class="hotel-price-detail mb-4">
+                            <span class="text-primary font-weight-bold" id="hotelPrice">¥1,288</span> <span>起/晚</span>
+                        </div>
+                        <div class="mb-4">
+                            <button class="btn btn-primary mr-2">立即预订</button>
+                            <button class="btn btn-outline-danger">
+                                <i class="far fa-heart"></i> 收藏
+                            </button>
+                        </div>
+                        <div class="hotel-amenities">
+                            <h4>酒店设施</h4>
+                            <div class="amenity-item">
+                                <i class="fas fa-wifi"></i>
+                                <span>免费WiFi</span>
+                            </div>
+                            <div class="amenity-item">
+                                <i class="fas fa-swimming-pool"></i>
+                                <span>游泳池</span>
+                            </div>
+                            <div class="amenity-item">
+                                <i class="fas fa-gym"></i>
+                                <span>健身房</span>
+                            </div>
+                            <div class="amenity-item">
+                                <i class="fas fa-utensils"></i>
+                                <span>餐厅</span>
+                            </div>
+                            <div class="amenity-item">
+                                <i class="fas fa-parking"></i>
+                                <span>免费停车</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 酒店描述 -->
+            <div class="row mt-5">
+                <div class="col-md-12">
+                    <h3>酒店描述</h3>
+                    <p id="hotelDescription">
+                        该酒店位于城市中心，交通便利，周边配套设施齐全。酒店提供舒适的客房和完善的服务，是商务出行和休闲度假的理想选择。
+                        酒店拥有多种房型可供选择，所有房间均配备现代化设施，为客人提供舒适的住宿体验。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <div id="footer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="js/main.js"></script>
+    <script>
+        // 获取URL参数
+        function getUrlParams() {
+            const params = {};
+            const urlParams = new URLSearchParams(window.location.search);
+            for (const [key, value] of urlParams.entries()) {
+                params[key] = value;
+            }
+            return params;
+        }
+
+        // 加载酒店详情
+        function loadHotelDetail() {
+            const params = getUrlParams();
+            if (params.id) {
+                // 这里可以根据ID从后端获取酒店详情
+                // 暂时使用静态数据
+                document.getElementById('hotelName').textContent = params.name || '酒店名称';
+                document.getElementById('hotelAddress').textContent = params.address || '酒店地址';
+                document.getElementById('hotelPrice').textContent = params.price ? `¥${params.price}` : '¥1,288';
+                document.getElementById('hotelImage').src = params.image || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20hotel%20exterior%2C%20luxury%20building%2C%20city%20view%2C%20daytime&image_size=landscape_4_3';
+                document.getElementById('pageTitle').textContent = `${params.name || '酒店名称'} - 干就完了`;
+            }
+        }
+
+        // 页面加载完成后执行
+        window.addEventListener('DOMContentLoaded', loadHotelDetail);
+    </script>
+</body>
+</html>

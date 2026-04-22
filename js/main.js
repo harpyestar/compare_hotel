@@ -73,6 +73,18 @@ document.addEventListener('DOMContentLoaded', function() {
             // 初始化语言切换功能
             initLanguageSwitch();
             
+            // 初始化查看详情功能
+            initViewDetails();
+            
+            // 初始化搜索选项切换功能
+            initSearchOptions();
+            
+            // 初始化搜索表单提交
+            initSearchForm();
+            
+            // 初始化热门搜索数据
+            initHotSearches();
+            
             // 初始更新页面文本
             updatePageText();
             // 初始更新人数与客房数显示文本
@@ -124,6 +136,337 @@ function initCompareHotels() {
             alert('比较功能开发中，敬请期待！');
         }
     });
+}
+
+// 查看详情功能
+function initViewDetails() {
+    const viewDetailsBtns = document.querySelectorAll('.view-details-btn');
+    
+    if (!viewDetailsBtns.length) return;
+    
+    // 为每个查看详情按钮添加点击事件
+    viewDetailsBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // 获取酒店卡片
+            const hotelCard = this.closest('.hotel-card');
+            if (!hotelCard) return;
+            
+            // 获取酒店信息
+            const hotelName = hotelCard.querySelector('.hotel-name').textContent;
+            const hotelAddress = hotelCard.querySelector('.hotel-address').textContent;
+            const hotelPrice = hotelCard.querySelector('.hotel-price').textContent.replace(/[^0-9]/g, '');
+            const hotelImage = hotelCard.querySelector('.hotel-image img').src;
+            const hotelId = hotelCard.querySelector('.favorite-btn').getAttribute('data-hotel-id');
+            
+            // 构建详情页URL
+            const detailUrl = `hotel-detail.html?id=${hotelId}&name=${encodeURIComponent(hotelName)}&address=${encodeURIComponent(hotelAddress)}&price=${hotelPrice}&image=${encodeURIComponent(hotelImage)}`;
+            
+            // 在新标签页中打开详情页
+            window.open(detailUrl, '_blank');
+        });
+    });
+}
+
+// 搜索选项切换功能
+function initSearchOptions() {
+    const searchByHotelBtn = document.getElementById('searchByHotel');
+    const searchByCityBtn = document.getElementById('searchByCity');
+    const hotelList = document.getElementById('hotelList');
+    const cityList = document.getElementById('cityList');
+    const searchTypeInput = document.getElementById('searchType');
+    
+    if (!searchByHotelBtn || !searchByCityBtn || !hotelList || !cityList) return;
+    
+    // 为搜索选项按钮添加点击事件
+    searchByHotelBtn.addEventListener('click', function() {
+        searchByHotelBtn.classList.add('active');
+        searchByCityBtn.classList.remove('active');
+        hotelList.style.display = 'flex';
+        cityList.style.display = 'none';
+        if (searchTypeInput) {
+            searchTypeInput.value = 'hotel';
+        }
+    });
+    
+    searchByCityBtn.addEventListener('click', function() {
+        searchByCityBtn.classList.add('active');
+        searchByHotelBtn.classList.remove('active');
+        hotelList.style.display = 'none';
+        cityList.style.display = 'flex';
+        if (searchTypeInput) {
+            searchTypeInput.value = 'city';
+        }
+    });
+}
+
+// 初始化搜索表单提交
+function initSearchForm() {
+    const searchForm = document.getElementById('searchForm');
+    const destinationInput = document.getElementById('destination');
+    const dateDisplay = document.getElementById('dateDisplay');
+    const guestsDisplay = document.getElementById('guestsDisplay');
+    const searchTypeInput = document.getElementById('searchType');
+    
+    if (!searchForm || !destinationInput || !dateDisplay || !guestsDisplay) return;
+    
+    // 处理搜索表单提交
+    searchForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const destination = destinationInput.value.trim();
+        const dateText = dateDisplay.textContent.trim();
+        const guestsText = guestsDisplay.textContent.trim();
+        
+        // 自动判断搜索类型
+        let searchType = searchTypeInput ? searchTypeInput.value : 'city';
+        console.log('Initial searchType:', searchType);
+        console.log('Destination:', destination);
+        
+        // 根据输入内容自动判断是城市还是酒店
+        // 检查是否包含酒店相关关键词
+        if (destination.includes('酒店') || destination.includes('饭店') || destination.includes('宾馆') || 
+            destination.includes('Hotel') || destination.includes('Motel') || destination.includes('Inn') ||
+            destination.includes('Resort') || destination.includes('Suite') || destination.includes('Villa')) {
+            searchType = 'hotel';
+            // 更新搜索类型输入框的值
+            if (searchTypeInput) {
+                searchTypeInput.value = 'hotel';
+            }
+            console.log('Updated searchType to hotel');
+        } 
+        // 检查是否是已知的酒店名称
+        else if (destination.includes('丽思卡尔顿') || destination.includes('香格里拉') || destination.includes('希尔顿') ||
+                 destination.includes('万豪') || destination.includes('洲际') || destination.includes('凯悦') ||
+                 destination.includes('喜来登') || destination.includes('四季') || destination.includes('半岛')) {
+            searchType = 'hotel';
+            // 更新搜索类型输入框的值
+            if (searchTypeInput) {
+                searchTypeInput.value = 'hotel';
+            }
+            console.log('Updated searchType to hotel (known hotel chain)');
+        } 
+        // 特别处理"上海大酒店"等情况
+        else if (destination.includes('大酒店')) {
+            searchType = 'hotel';
+            // 更新搜索类型输入框的值
+            if (searchTypeInput) {
+                searchTypeInput.value = 'hotel';
+            }
+            console.log('Updated searchType to hotel (contains "大酒店")');
+        } else {
+            // 默认为城市类型
+            searchType = 'city';
+            // 更新搜索类型输入框的值
+            if (searchTypeInput) {
+                searchTypeInput.value = 'city';
+            }
+            console.log('Updated searchType to city');
+        }
+        
+        console.log('Final searchType:', searchType);
+        
+        if (!destination) {
+            alert('请输入目的地');
+            return;
+        }
+        
+        if (dateText === '选择日期') {
+            alert('请选择日期');
+            return;
+        }
+        
+        // 解析日期
+        let checkIn, checkOut;
+        console.log('Date text:', dateText);
+        
+        // 检查是否是中文格式: 2026年4月21日 - 2026年4月22日
+        const chineseDateMatch = dateText.match(/(\d+)年(\d+)月(\d+)日\s*-\s*(\d+)年(\d+)月(\d+)日/);
+        if (chineseDateMatch) {
+            checkIn = `${chineseDateMatch[1]}-${String(chineseDateMatch[2]).padStart(2, '0')}-${String(chineseDateMatch[3]).padStart(2, '0')}`;
+            checkOut = `${chineseDateMatch[4]}-${String(chineseDateMatch[5]).padStart(2, '0')}-${String(chineseDateMatch[6]).padStart(2, '0')}`;
+        } 
+        // 检查是否是英文格式: 2026/4/21 - 2026/4/22
+        else if (dateText.includes('/')) {
+            const englishDateMatch = dateText.match(/(\d+)\/(\d+)\/(\d+)\s*-\s*(\d+)\/(\d+)\/(\d+)/);
+            if (englishDateMatch) {
+                checkIn = `${englishDateMatch[1]}-${String(englishDateMatch[2]).padStart(2, '0')}-${String(englishDateMatch[3]).padStart(2, '0')}`;
+                checkOut = `${englishDateMatch[4]}-${String(englishDateMatch[5]).padStart(2, '0')}-${String(englishDateMatch[6]).padStart(2, '0')}`;
+            } else {
+                alert('日期格式不正确');
+                return;
+            }
+        } 
+        // 检查是否是旧的中文格式: 4月21日 - 4月22日
+        else if (dateText.includes('月') && dateText.includes('日')) {
+            const oldChineseDateMatch = dateText.match(/(\d+)月(\d+)日\s*-\s*(\d+)月(\d+)日/);
+            if (oldChineseDateMatch) {
+                const now = new Date();
+                const year = now.getFullYear();
+                checkIn = `${year}-${String(oldChineseDateMatch[1]).padStart(2, '0')}-${String(oldChineseDateMatch[2]).padStart(2, '0')}`;
+                checkOut = `${year}-${String(oldChineseDateMatch[3]).padStart(2, '0')}-${String(oldChineseDateMatch[4]).padStart(2, '0')}`;
+            } else {
+                alert('日期格式不正确');
+                return;
+            }
+        } else {
+            alert('日期格式不正确');
+            return;
+        }
+        
+        // 解析城市和酒店信息
+        let city = null;
+        let hotel = null;
+        
+        // 根据搜索类型和内容解析
+        if (searchType === 'city') {
+            city = destination;
+        } else if (searchType === 'hotel') {
+            hotel = destination;
+            // 尝试从酒店名称中提取城市
+            const cityMatch = destination.match(/^(北京|上海|广州|深圳|杭州|成都|重庆|三亚)/);
+            if (cityMatch) {
+                city = cityMatch[1];
+            }
+        }
+        
+        // 保存搜索历史
+        console.log('Saving search history with type:', searchType);
+        try {
+            // 确保searchType有值
+            const finalType = searchType || 'city';
+            console.log('Final type to send to server:', finalType);
+            
+            const response = await fetch('/api/history', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem('sessionId')
+                },
+                body: JSON.stringify({ destination, checkIn, checkOut, type: finalType, city, hotel })
+            });
+            
+            const result = await response.json();
+            console.log('Save history result:', result);
+            if (!result.success && result.message === '登录后才能保存搜索历史') {
+                // 未登录，不影响搜索
+                console.log('Not logged in, search history not saved');
+            }
+        } catch (error) {
+            console.error('保存搜索历史失败:', error);
+        }
+        
+        // 执行搜索
+        alert(`搜索: ${destination}, 日期: ${checkIn} 至 ${checkOut}, 类型: ${searchType}`);
+        // 这里可以添加实际的搜索逻辑
+    });
+}
+
+// 初始化热门搜索数据
+async function initHotSearches() {
+    try {
+        // 获取热门城市搜索
+        const citiesResponse = await fetch('/api/hot-cities');
+        const citiesData = await citiesResponse.json();
+        
+        // 获取热门酒店搜索
+        const hotelsResponse = await fetch('/api/hot-hotels');
+        const hotelsData = await hotelsResponse.json();
+        
+        // 更新热门酒店列表
+        updateHotelList(hotelsData.success ? hotelsData.hotels : []);
+        
+        // 更新城市列表
+        updateCityList(citiesData.success ? citiesData.cities : []);
+        
+    } catch (error) {
+        console.error('获取热门搜索数据失败:', error);
+        // 显示空状态
+        updateHotelList([]);
+        updateCityList([]);
+    }
+}
+
+// 更新酒店列表
+function updateHotelList(hotels) {
+    const hotelList = document.getElementById('hotelList');
+    if (!hotelList) return;
+    
+    if (hotels.length > 0) {
+        // 生成酒店列表
+        let hotelHTML = '';
+        hotels.forEach((hotel, index) => {
+            hotelHTML += `
+                <div class="col-md-4">
+                    <div class="hotel-card">
+                        <div class="compare-checkbox">
+                            <input type="checkbox" class="form-check-input" id="hotel${index + 1}">
+                        </div>
+                        <div class="hotel-image">
+                            <img src="https://via.placeholder.com/400x300?text=${encodeURIComponent(hotel.name)}" alt="${hotel.name}">
+                            <div class="hotel-rating">4.5</div>
+                        </div>
+                        <div class="hotel-info">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h3 class="hotel-name">${hotel.name}</h3>
+                                <button class="btn btn-sm btn-outline-danger favorite-btn" data-hotel-id="${index + 1}" data-hotel-name="${hotel.name}" data-hotel-address="" data-hotel-price="0" data-hotel-image="https://via.placeholder.com/400x300?text=${encodeURIComponent(hotel.name)}">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            </div>
+                            <p class="hotel-address">搜索次数: ${hotel.count}</p>
+                            <div class="hotel-price">热门指数: ${hotel.count}</div>
+                            <button class="btn btn-sm btn-outline-primary view-details-btn">查看详情</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        hotelList.innerHTML = hotelHTML;
+    } else {
+        // 显示空状态
+        hotelList.innerHTML = `
+            <div class="col-md-12 text-center py-10">
+                <p class="text-muted">暂无热门酒店搜索数据</p>
+            </div>
+        `;
+    }
+    
+    // 重新初始化查看详情功能
+    initViewDetails();
+}
+
+// 更新城市列表
+function updateCityList(cities) {
+    const cityList = document.getElementById('cityList');
+    if (!cityList) return;
+    
+    if (cities.length > 0) {
+        // 生成城市列表
+        let cityHTML = `
+            <div class="col-md-12">
+                <div class="city-grid">
+        `;
+        cities.forEach((city, index) => {
+            cityHTML += `
+                <div class="city-item">
+                    <img src="https://via.placeholder.com/200x150?text=${encodeURIComponent(city.name)}" alt="${city.name}">
+                    <h4>${city.name}</h4>
+                    <p class="text-sm text-muted">搜索次数: ${city.count}</p>
+                </div>
+            `;
+        });
+        cityHTML += `
+                </div>
+            </div>
+        `;
+        cityList.innerHTML = cityHTML;
+    } else {
+        // 显示空状态
+        cityList.innerHTML = `
+            <div class="col-md-12 text-center py-10">
+                <p class="text-muted">暂无热门城市搜索数据</p>
+            </div>
+        `;
+    }
 }
 
 // 初始化语言切换功能

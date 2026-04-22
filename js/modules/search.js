@@ -52,6 +52,11 @@ const searchModule = {
             container.querySelectorAll('.suggestion-item').forEach(item => {
                 item.addEventListener('click', () => {
                     document.getElementById('destination').value = item.dataset.city;
+                    // 更新搜索类型为城市
+                    const searchTypeInput = document.getElementById('searchType');
+                    if (searchTypeInput) {
+                        searchTypeInput.value = 'city';
+                    }
                     container.style.display = 'none';
                 });
             });
