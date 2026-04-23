@@ -472,10 +472,14 @@ app.post('/api/history', async (req, res) => {
             [username, destination, city || null, hotel || null, finalType, checkIn, checkOut]
         );
         
-        // 限制历史记录数量
+        // 分别限制酒店和城市搜索的历史记录数量，各保留10条
         await connection.execute(
-            'DELETE FROM search_history WHERE username = ? AND id NOT IN (SELECT id FROM (SELECT id FROM search_history WHERE username = ? ORDER BY timestamp DESC LIMIT 10) as temp)',
-            [username, username]
+            'DELETE FROM search_history WHERE username = ? AND type = ? AND id NOT IN (SELECT id FROM (SELECT id FROM search_history WHERE username = ? AND type = ? ORDER BY timestamp DESC LIMIT 10) as temp)',
+            [username, 'hotel', username, 'hotel']
+        );
+        await connection.execute(
+            'DELETE FROM search_history WHERE username = ? AND type = ? AND id NOT IN (SELECT id FROM (SELECT id FROM search_history WHERE username = ? AND type = ? ORDER BY timestamp DESC LIMIT 10) as temp)',
+            [username, 'city', username, 'city']
         );
         
         // 关闭连接
