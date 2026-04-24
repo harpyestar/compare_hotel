@@ -66,8 +66,14 @@ const userModule = {
                 body: JSON.stringify({ username, password })
             });
             
+            console.log('Login response:', response);
+            
             if (response.success) {
                 this.showUserInfo(username);
+                if (response.sessionId) {
+                    localStorage.setItem('sessionId', response.sessionId);
+                    console.log('SessionId saved:', response.sessionId);
+                }
                 utils.showToast('登录成功！');
                 const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
                 if (loginModal) loginModal.hide();
@@ -95,6 +101,7 @@ const userModule = {
             
             if (response.success) {
                 this.showUserInfo(username);
+                localStorage.setItem('sessionId', response.sessionId);
                 utils.showToast('注册成功！');
                 const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
                 if (registerModal) registerModal.hide();
@@ -116,6 +123,7 @@ const userModule = {
             
             if (response.success) {
                 this.showLoginRegisterButtons();
+                localStorage.removeItem('sessionId');
                 utils.showToast('退出登录成功！');
             } else {
                 utils.showToast('退出登录失败：' + response.error, 'error');
@@ -125,11 +133,31 @@ const userModule = {
     
     // 检查登录状态
     async checkLoginStatus() {
-        const response = await utils.fetch('/api/check-login');
+        const currentSessionId = localStorage.getItem('sessionId');
+        console.log('Current sessionId from localStorage:', currentSessionId);
+        
+        const response = await utils.fetch('/api/check-login', {
+            headers: {
+                'Authorization': currentSessionId
+            }
+        });
+        
+        console.log('Check login response:', response);
         
         if (response.loggedIn) {
+            // 如果登录成功，确保sessionId被保存
+            if (response.sessionId) {
+                localStorage.setItem('sessionId', response.sessionId);
+                console.log('SessionId saved from response:', response.sessionId);
+            } else if (currentSessionId) {
+                // 如果服务器没有返回sessionId但localStorage中有，保持不变
+                console.log('Using existing sessionId from localStorage');
+            }
             this.showUserInfo(response.username);
         } else {
+            // 未登录，清除localStorage中的sessionId
+            localStorage.removeItem('sessionId');
+            console.log('Not logged in, sessionId removed from localStorage');
             this.showLoginRegisterButtons();
         }
     },

@@ -122,7 +122,7 @@ const searchModule = {
     
     // 设置向导项
     setupGuideItems() {
-        const guideItems = document.querySelectorAll('.guide-item');
+        const guideItems = document.querySelectorAll('.city-guide-item');
         const cityInput = document.getElementById('city');
         
         if (!cityInput) return;

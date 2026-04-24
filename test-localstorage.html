@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试localStorage</title>
+</head>
+<body>
+    <h1>测试localStorage</h1>
+    <div>
+        <button onclick="testLocalStorage()">测试localStorage</button>
+        <button onclick="clearLocalStorage()">清除localStorage</button>
+    </div>
+    <div id="result"></div>
+
+    <script>
+        function testLocalStorage() {
+            const resultDiv = document.getElementById('result');
+            
+            // 测试设置localStorage
+            localStorage.setItem('testKey', 'testValue');
+            resultDiv.innerHTML += '<p>设置localStorage: testKey = testValue</p>';
+            
+            // 测试读取localStorage
+            const testValue = localStorage.getItem('testKey');
+            resultDiv.innerHTML += `<p>读取localStorage: testKey = ${testValue}</p>`;
+            
+            // 测试sessionId
+            const sessionId = localStorage.getItem('sessionId');
+            resultDiv.innerHTML += `<p>当前sessionId: ${sessionId}</p>`;
+            
+            // 测试localStorage长度
+            resultDiv.innerHTML += `<p>localStorage长度: ${localStorage.length}</p>`;
+            
+            // 列出所有localStorage项
+            resultDiv.innerHTML += '<h3>所有localStorage项:</h3>';
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                resultDiv.innerHTML += `<p>${key}: ${value}</p>`;
+            }
+        }
+        
+        function clearLocalStorage() {
+            localStorage.clear();
+            document.getElementById('result').innerHTML += '<p>已清除localStorage</p>';
+        }
+    </script>
+</body>
+</html>

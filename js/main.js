@@ -287,21 +287,25 @@ function initSearchForm() {
         
         // 保存搜索历史
         console.log('Saving search history with type:', searchType);
+        console.log('Session ID:', localStorage.getItem('sessionId'));
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const response = await fetch('/api/history', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': localStorage.getItem('sessionId')
+                    'Authorization': sessionId
                 },
                 body: JSON.stringify({ destination, checkIn, checkOut, type: searchType, city, hotel })
             });
             
+            console.log('Response status:', response.status);
             const result = await response.json();
             console.log('Save history result:', result);
-            if (!result.success && result.message === '登录后才能保存搜索历史') {
-                // 未登录，不影响搜索
-                console.log('Not logged in, search history not saved');
+            if (result.success) {
+                console.log('Search history saved successfully');
+            } else {
+                console.log('Save history failed:', result.message);
             }
         } catch (error) {
             console.error('保存搜索历史失败:', error);

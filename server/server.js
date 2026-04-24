@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const mysql = require('mysql2/promise');
+const initSqlJs = require('sql.js');
 const i18next = require('i18next');
 const Backend = require('i18next-node-fs-backend');
 const middleware = require('i18next-express-middleware');
@@ -120,15 +120,20 @@ const cities = [
 ];
 
 // 数据库连接配置
-const dbConfig = {
-    host: 'localhost',
-    user: 'root',
-    password: '123456',
-    database: 'hotel_search'
-};
+const dbPath = path.join(__dirname, '..', 'data', 'hotel_search.db');
 
-// 数据库连接状态
 let dbConnected = false;
+let db;
+const fs = require('fs');
+
+// 保存数据库到文件
+function saveDatabase() {
+    if (db) {
+        const data = db.export();
+        const buffer = Buffer.from(data);
+        fs.writeFileSync(dbPath, buffer);
+    }
+}
 
 // 生成会话ID
 function generateSessionId() {
@@ -138,83 +143,78 @@ function generateSessionId() {
 // 初始化数据库
 async function initDatabase() {
     try {
-        // 创建数据库连接
-        const connection = await mysql.createConnection({
-            host: dbConfig.host,
-            user: dbConfig.user,
-            password: dbConfig.password
-        });
-        
-        // 创建数据库
-        await connection.execute('CREATE DATABASE IF NOT EXISTS hotel_search');
-        console.log('数据库创建成功');
-        
-        // 使用数据库
-        await connection.query('USE hotel_search');
-        
-        // 创建用户表
-        await connection.execute(`
+        const dataDir = path.join(__dirname, '..', 'data');
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+
+        const SQL = await initSqlJs();
+
+        if (fs.existsSync(dbPath)) {
+            const fileBuffer = fs.readFileSync(dbPath);
+            db = new SQL.Database(fileBuffer);
+        } else {
+            db = new SQL.Database();
+        }
+
+        dbConnected = true;
+        console.log('数据库连接成功');
+
+        db.run(`
             CREATE TABLE IF NOT EXISTS users (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                username VARCHAR(50) UNIQUE NOT NULL,
-                password VARCHAR(50) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `);
         console.log('用户表创建成功');
-        
-        // 创建会话表
-        await connection.execute(`
+
+        db.run(`
             CREATE TABLE IF NOT EXISTS sessions (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                session_id VARCHAR(50) UNIQUE NOT NULL,
-                username VARCHAR(50) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT UNIQUE NOT NULL,
+                username TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
             )
         `);
         console.log('会话表创建成功');
-        
-        // 创建搜索历史表（如果不存在）
-        await connection.execute(`
+
+        db.run(`
             CREATE TABLE IF NOT EXISTS search_history (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                username VARCHAR(50) NOT NULL,
-                destination VARCHAR(100) NOT NULL,
-                city VARCHAR(50) NULL,
-                hotel VARCHAR(100) NULL,
-                type ENUM('hotel', 'city') NOT NULL DEFAULT 'city',
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                destination TEXT NOT NULL,
+                city TEXT,
+                hotel TEXT,
+                type TEXT NOT NULL DEFAULT 'city',
                 check_in DATE NOT NULL,
                 check_out DATE NOT NULL,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
             )
         `);
         console.log('搜索历史表创建成功');
 
-        
-        // 创建收藏酒店表
-        await connection.execute(`
+        db.run(`
             CREATE TABLE IF NOT EXISTS favorites (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                username VARCHAR(50) NOT NULL,
-                hotel_id VARCHAR(50) NOT NULL,
-                hotel_name VARCHAR(100) NOT NULL,
-                hotel_address VARCHAR(200) NOT NULL,
-                hotel_price INT NOT NULL,
-                hotel_image VARCHAR(500) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE KEY unique_user_hotel (username, hotel_id),
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                hotel_id TEXT NOT NULL,
+                hotel_name TEXT NOT NULL,
+                hotel_address TEXT NOT NULL,
+                hotel_price INTEGER NOT NULL,
+                hotel_image TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(username, hotel_id),
                 FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
             )
         `);
         console.log('收藏酒店表创建成功');
-        
-        // 关闭连接
-        await connection.end();
-        dbConnected = true;
+
+        saveDatabase();
         console.log('数据库初始化完成');
-        console.log('数据库连接成功，使用MySQL存储数据');
 
     } catch (error) {
         console.error('数据库初始化错误:', error);
@@ -244,57 +244,29 @@ app.get('/api/suggestions', (req, res) => {
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
-        
+
         if (!username || !password) {
             return res.json({ success: false, message: req.t('messages.registerFailed') });
         }
-        
+
         if (!dbConnected) {
             return res.json({ success: false, message: req.t('messages.databaseError') });
         }
-        
-        // 使用数据库存储
-        console.log('使用数据库存储进行注册');
+
         try {
-            // 创建数据库连接
-            console.log('创建数据库连接');
-            const connection = await mysql.createConnection(dbConfig);
-            console.log('数据库连接成功');
-            
-            // 检查用户名是否已存在
-            console.log('检查用户名是否已存在:', username);
-            const [existingUsers] = await connection.execute(
-                'SELECT * FROM users WHERE username = ?',
-                [username]
-            );
-            console.log('检查结果:', existingUsers.length);
-            
-            if (existingUsers.length > 0) {
-                await connection.end();
+            const existingUsers = db.exec('SELECT * FROM users WHERE username = ?', [username]);
+
+            if (existingUsers.length > 0 && existingUsers[0].values.length > 0) {
                 return res.json({ success: false, message: req.t('messages.usernameExists') });
             }
-            
-            // 创建新用户
-            console.log('创建新用户:', username);
-            await connection.execute(
-                'INSERT INTO users (username, password) VALUES (?, ?)',
-                [username, password]
-            );
-            console.log('用户创建成功');
-            
-            // 创建会话
+
+            db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, password]);
+            saveDatabase();
+
             const sessionId = generateSessionId();
-            console.log('创建会话:', sessionId);
-            await connection.execute(
-                'INSERT INTO sessions (session_id, username) VALUES (?, ?)',
-                [sessionId, username]
-            );
-            console.log('会话创建成功');
-            
-            // 关闭连接
-            await connection.end();
-            console.log('数据库连接关闭');
-            
+            db.run('INSERT INTO sessions (session_id, username) VALUES (?, ?)', [sessionId, username]);
+            saveDatabase();
+
             return res.json({ success: true, username, sessionId });
         } catch (error) {
             console.error('注册错误:', error);
@@ -309,41 +281,26 @@ app.post('/api/register', async (req, res) => {
 // 登录API
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
-    
+
     if (!username || !password) {
         return res.json({ success: false, message: req.t('messages.loginFailed') });
     }
-    
+
     if (!dbConnected) {
         return res.json({ success: false, message: req.t('messages.databaseError') });
     }
-    
-    // 使用数据库存储
+
     try {
-        // 创建数据库连接
-        const connection = await mysql.createConnection(dbConfig);
-        
-        // 验证用户
-        const [users] = await connection.execute(
-            'SELECT * FROM users WHERE username = ? AND password = ?',
-            [username, password]
-        );
-        
-        if (users.length === 0) {
-            await connection.end();
+        const users = db.exec('SELECT * FROM users WHERE username = ? AND password = ?', [username, password]);
+
+        if (users.length === 0 || users[0].values.length === 0) {
             return res.json({ success: false, message: req.t('messages.loginFailed') });
         }
-        
-        // 创建会话
+
         const sessionId = generateSessionId();
-        await connection.execute(
-            'INSERT INTO sessions (session_id, username) VALUES (?, ?)',
-            [sessionId, username]
-        );
-        
-        // 关闭连接
-        await connection.end();
-        
+        db.run('INSERT INTO sessions (session_id, username) VALUES (?, ?)', [sessionId, username]);
+        saveDatabase();
+
         res.json({ success: true, username, sessionId });
     } catch (error) {
         console.error('登录错误:', error);
@@ -354,26 +311,17 @@ app.post('/api/login', async (req, res) => {
 // 退出登录API
 app.post('/api/logout', async (req, res) => {
     const sessionId = req.headers['authorization'];
-    
+
     if (!dbConnected) {
         return res.json({ success: false, message: req.t('messages.databaseError') });
     }
-    
-    // 使用数据库存储
+
     try {
-        // 创建数据库连接
-        const connection = await mysql.createConnection(dbConfig);
-        
         if (sessionId) {
-            await connection.execute(
-                'DELETE FROM sessions WHERE session_id = ?',
-                [sessionId]
-            );
+            db.run('DELETE FROM sessions WHERE session_id = ?', [sessionId]);
+            saveDatabase();
         }
-        
-        // 关闭连接
-        await connection.end();
-        
+
         res.json({ success: true });
     } catch (error) {
         console.error('退出登录错误:', error);
@@ -384,31 +332,20 @@ app.post('/api/logout', async (req, res) => {
 // 检查登录状态API
 app.get('/api/check-login', async (req, res) => {
     const sessionId = req.headers['authorization'];
-    
+
     if (!dbConnected) {
         return res.json({ loggedIn: false, message: req.t('messages.databaseError') });
     }
-    
-    // 使用数据库存储
+
     try {
-        // 创建数据库连接
-        const connection = await mysql.createConnection(dbConfig);
-        
         if (sessionId) {
-            const [sessions] = await connection.execute(
-                'SELECT * FROM sessions WHERE session_id = ?',
-                [sessionId]
-            );
-            
-            if (sessions.length > 0) {
-                await connection.end();
-                return res.json({ loggedIn: true, username: sessions[0].username });
+            const sessions = db.exec('SELECT * FROM sessions WHERE session_id = ?', [sessionId]);
+
+            if (sessions.length > 0 && sessions[0].values.length > 0) {
+                return res.json({ loggedIn: true, username: sessions[0].values[0][2], sessionId: sessionId });
             }
         }
-        
-        // 关闭连接
-        await connection.end();
-        
+
         res.json({ loggedIn: false });
     } catch (error) {
         console.error('检查登录状态错误:', error);
@@ -419,73 +356,96 @@ app.get('/api/check-login', async (req, res) => {
 // 获取用户信息
 async function getUserFromSession(req) {
     const sessionId = req.headers['authorization'];
+    console.log('Session ID from header:', sessionId);
     if (sessionId && dbConnected) {
         try {
-            // 创建数据库连接
-            const connection = await mysql.createConnection(dbConfig);
-            
-            const [sessions] = await connection.execute(
-                'SELECT * FROM sessions WHERE session_id = ?',
-                [sessionId]
-            );
-            
-            await connection.end();
-            
-            if (sessions.length > 0) {
-                return sessions[0].username;
+            console.log('Executing session query with sessionId:', sessionId);
+            const sessions = db.exec('SELECT * FROM sessions WHERE session_id = ?', [sessionId]);
+            console.log('Session query result:', sessions);
+
+            if (sessions.length > 0 && sessions[0].values.length > 0) {
+                console.log('Found user:', sessions[0].values[0][2]);
+                return sessions[0].values[0][2];
             }
         } catch (error) {
             console.error('获取用户信息错误:', error);
         }
     }
+    console.log('No user found');
     return null;
 }
 
 // 保存搜索历史API
 app.post('/api/history', async (req, res) => {
+    console.log('Received save history request');
+    console.log('Request headers:', req.headers);
+    console.log('Request body:', req.body);
     const username = await getUserFromSession(req);
-    if (!username) {
-        return res.json({ success: false, message: req.t('messages.loginRequired') });
-    }
+    console.log('Username from session:', username);
     
     const { destination, checkIn, checkOut, type, city, hotel } = req.body;
+    console.log('Search parameters:', { destination, checkIn, checkOut, type, city, hotel });
     if (!destination || !checkIn || !checkOut) {
+        console.log('Missing required parameters');
         return res.json({ success: false, message: req.t('messages.searchInfoIncomplete') });
     }
-    
+
     if (!dbConnected) {
+        console.log('Database not connected');
         return res.json({ success: false, message: req.t('messages.databaseError') });
     }
-    
-    // 使用数据库存储
+
     try {
-        // 创建数据库连接
-        const connection = await mysql.createConnection(dbConfig);
-        
-        // 保存搜索历史
-        console.log('Received search type from client:', type);
         const finalType = type === 'hotel' ? 'hotel' : 'city';
-        console.log('Final type to save:', finalType);
+        console.log('Final type:', finalType);
+
+        // 无论用户是否登录，都保存搜索记录到数据库
+        // 对于未登录用户，username字段设为'guest'
+        const user = username || 'guest';
         
-        await connection.execute(
+        console.log('Executing INSERT statement for user:', user);
+        db.run(
             'INSERT INTO search_history (username, destination, city, hotel, type, check_in, check_out) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [username, destination, city || null, hotel || null, finalType, checkIn, checkOut]
+            [user, destination, city || null, hotel || null, finalType, checkIn, checkOut]
         );
-        
-        // 分别限制酒店和城市搜索的历史记录数量，各保留10条
-        await connection.execute(
-            'DELETE FROM search_history WHERE username = ? AND type = ? AND id NOT IN (SELECT id FROM (SELECT id FROM search_history WHERE username = ? AND type = ? ORDER BY timestamp DESC LIMIT 10) as temp)',
-            [username, 'hotel', username, 'hotel']
-        );
-        await connection.execute(
-            'DELETE FROM search_history WHERE username = ? AND type = ? AND id NOT IN (SELECT id FROM (SELECT id FROM search_history WHERE username = ? AND type = ? ORDER BY timestamp DESC LIMIT 10) as temp)',
-            [username, 'city', username, 'city']
-        );
-        
-        // 关闭连接
-        await connection.end();
-        
+        console.log('INSERT statement executed');
+
+        // 只对登录用户进行历史记录限制
+        if (username) {
+            // 只保留最近10条酒店搜索历史
+            const historyIds = db.exec(
+                'SELECT id FROM search_history WHERE username = ? AND type = ? ORDER BY timestamp DESC LIMIT 10',
+                [username, 'hotel']
+            );
+            console.log('Hotel history IDs:', historyIds);
+            if (historyIds.length > 0 && historyIds[0].values.length > 0) {
+                const idsToKeep = historyIds[0].values.map(v => v[0]).join(',');
+                if (idsToKeep) {
+                    console.log('Deleting old hotel history with IDs not in:', idsToKeep);
+                    db.run(`DELETE FROM search_history WHERE username = ? AND type = 'hotel' AND id NOT IN (${idsToKeep})`, [username]);
+                }
+            }
+
+            // 只保留最近10条城市搜索历史
+            const cityHistoryIds = db.exec(
+                'SELECT id FROM search_history WHERE username = ? AND type = ? ORDER BY timestamp DESC LIMIT 10',
+                [username, 'city']
+            );
+            console.log('City history IDs:', cityHistoryIds);
+            if (cityHistoryIds.length > 0 && cityHistoryIds[0].values.length > 0) {
+                const idsToKeep = cityHistoryIds[0].values.map(v => v[0]).join(',');
+                if (idsToKeep) {
+                    console.log('Deleting old city history with IDs not in:', idsToKeep);
+                    db.run(`DELETE FROM search_history WHERE username = ? AND type = 'city' AND id NOT IN (${idsToKeep})`, [username]);
+                }
+            }
+        }
+
+        console.log('Saving database');
+        saveDatabase();
+        console.log('Database saved');
         res.json({ success: true });
+        console.log('Response sent successfully');
     } catch (error) {
         console.error('保存搜索历史错误:', error);
         return res.json({ success: false, message: req.t('messages.saveHistoryFailed') });
@@ -498,25 +458,27 @@ app.get('/api/history', async (req, res) => {
     if (!username) {
         return res.json({ success: false, message: req.t('messages.loginRequired'), history: [] });
     }
-    
+
     if (!dbConnected) {
         return res.json({ success: false, message: req.t('messages.databaseError'), history: [] });
     }
-    
-    // 使用数据库存储
+
     try {
-        // 创建数据库连接
-        const connection = await mysql.createConnection(dbConfig);
-        
-        // 获取搜索历史
-        const [history] = await connection.execute(
+        const result = db.exec(
             'SELECT destination, check_in as checkIn, check_out as checkOut, timestamp FROM search_history WHERE username = ? ORDER BY timestamp DESC',
             [username]
         );
-        
-        // 关闭连接
-        await connection.end();
-        
+
+        let history = [];
+        if (result.length > 0 && result[0].values.length > 0) {
+            const columns = result[0].columns;
+            history = result[0].values.map(row => {
+                const obj = {};
+                columns.forEach((col, i) => obj[col] = row[i]);
+                return obj;
+            });
+        }
+
         res.json({ success: true, history });
     } catch (error) {
         console.error('获取搜索历史错误:', error);
@@ -530,41 +492,29 @@ app.post('/api/favorites', async (req, res) => {
     if (!username) {
         return res.json({ success: false, message: req.t('messages.loginRequired') });
     }
-    
+
     const hotel = req.body;
     if (!hotel.id || !hotel.name || !hotel.address || !hotel.price || !hotel.image) {
         return res.json({ success: false, message: req.t('messages.hotelInfoIncomplete') });
     }
-    
+
     if (!dbConnected) {
         return res.json({ success: false, message: req.t('messages.databaseError') });
     }
-    
-    // 使用数据库存储
+
     try {
-        // 创建数据库连接
-        const connection = await mysql.createConnection(dbConfig);
-        
-        // 检查是否已经收藏
-        const [existingFavorites] = await connection.execute(
-            'SELECT * FROM favorites WHERE username = ? AND hotel_id = ?',
-            [username, hotel.id]
-        );
-        
-        if (existingFavorites.length > 0) {
-                await connection.end();
-                return res.json({ success: false, message: req.t('messages.hotelAlreadyFavorited') });
-            }
-        
-        // 保存收藏
-        await connection.execute(
+        const existingFavorites = db.exec('SELECT * FROM favorites WHERE username = ? AND hotel_id = ?', [username, hotel.id]);
+
+        if (existingFavorites.length > 0 && existingFavorites[0].values.length > 0) {
+            return res.json({ success: false, message: req.t('messages.hotelAlreadyFavorited') });
+        }
+
+        db.run(
             'INSERT INTO favorites (username, hotel_id, hotel_name, hotel_address, hotel_price, hotel_image) VALUES (?, ?, ?, ?, ?, ?)',
             [username, hotel.id, hotel.name, hotel.address, hotel.price, hotel.image]
         );
-        
-        // 关闭连接
-        await connection.end();
-        
+        saveDatabase();
+
         res.json({ success: true });
     } catch (error) {
         console.error('收藏酒店错误:', error);
@@ -578,25 +528,27 @@ app.get('/api/favorites', async (req, res) => {
     if (!username) {
         return res.json({ success: false, message: req.t('messages.loginRequired'), favorites: [] });
     }
-    
+
     if (!dbConnected) {
         return res.json({ success: false, message: req.t('messages.databaseError'), favorites: [] });
     }
-    
-    // 使用数据库存储
+
     try {
-        // 创建数据库连接
-        const connection = await mysql.createConnection(dbConfig);
-        
-        // 获取收藏酒店
-        const [favorites] = await connection.execute(
+        const result = db.exec(
             'SELECT hotel_id as id, hotel_name as name, hotel_address as address, hotel_price as price, hotel_image as image FROM favorites WHERE username = ?',
             [username]
         );
-        
-        // 关闭连接
-        await connection.end();
-        
+
+        let favorites = [];
+        if (result.length > 0 && result[0].values.length > 0) {
+            const columns = result[0].columns;
+            favorites = result[0].values.map(row => {
+                const obj = {};
+                columns.forEach((col, i) => obj[col] = row[i]);
+                return obj;
+            });
+        }
+
         res.json({ success: true, favorites });
     } catch (error) {
         console.error('获取收藏酒店错误:', error);
@@ -610,32 +562,18 @@ app.delete('/api/favorites/:id', async (req, res) => {
     if (!username) {
         return res.json({ success: false, message: req.t('messages.loginRequired') });
     }
-    
+
     const hotelId = req.params.id;
-    
+
     if (!dbConnected) {
         return res.json({ success: false, message: req.t('messages.databaseError') });
     }
-    
-    // 使用数据库存储
+
     try {
-        // 创建数据库连接
-        const connection = await mysql.createConnection(dbConfig);
-        
-        // 取消收藏
-        const [result] = await connection.execute(
-            'DELETE FROM favorites WHERE username = ? AND hotel_id = ?',
-            [username, hotelId]
-        );
-        
-        // 关闭连接
-        await connection.end();
-        
-        if (result.affectedRows > 0) {
-            res.json({ success: true });
-        } else {
-            res.json({ success: false, message: req.t('messages.hotelNotFavorited') });
-        }
+        db.run('DELETE FROM favorites WHERE username = ? AND hotel_id = ?', [username, hotelId]);
+        saveDatabase();
+
+        res.json({ success: true });
     } catch (error) {
         console.error('取消收藏酒店错误:', error);
         return res.json({ success: false, message: req.t('messages.unfavoriteFailed') });
@@ -647,27 +585,29 @@ app.get('/api/hot-hotels', async (req, res) => {
     if (!dbConnected) {
         return res.json({ success: false, message: req.t('messages.databaseError'), hotels: [] });
     }
-    
+
     try {
-        // 创建数据库连接
-        const connection = await mysql.createConnection(dbConfig);
-        
-        // 获取热门酒店搜索，按搜索次数降序排列
-        const [hotels] = await connection.execute(
-            `SELECT 
-                COALESCE(hotel, destination) as name, 
-                COUNT(*) as count 
-            FROM search_history 
-            WHERE type = ? AND (hotel IS NOT NULL OR destination LIKE '%酒店%' OR destination LIKE '%饭店%' OR destination LIKE '%宾馆%') 
-            GROUP BY COALESCE(hotel, destination) 
-            ORDER BY count DESC 
-            LIMIT 10`,
-            ['hotel']
-        );
-        
-        // 关闭连接
-        await connection.end();
-        
+        const result = db.exec(`
+            SELECT
+                COALESCE(hotel, destination) as name,
+                COUNT(*) as count
+            FROM search_history
+            WHERE type = 'hotel' AND (hotel IS NOT NULL OR destination LIKE '%酒店%' OR destination LIKE '%饭店%' OR destination LIKE '%宾馆%')
+            GROUP BY COALESCE(hotel, destination)
+            ORDER BY count DESC
+            LIMIT 10
+        `);
+
+        let hotels = [];
+        if (result.length > 0 && result[0].values.length > 0) {
+            const columns = result[0].columns;
+            hotels = result[0].values.map(row => {
+                const obj = {};
+                columns.forEach((col, i) => obj[col] = row[i]);
+                return obj;
+            });
+        }
+
         res.json({ success: true, hotels });
     } catch (error) {
         console.error('获取热门酒店搜索错误:', error);
@@ -680,27 +620,29 @@ app.get('/api/hot-cities', async (req, res) => {
     if (!dbConnected) {
         return res.json({ success: false, message: req.t('messages.databaseError'), cities: [] });
     }
-    
+
     try {
-        // 创建数据库连接
-        const connection = await mysql.createConnection(dbConfig);
-        
-        // 获取热门城市搜索，按搜索次数降序排列
-        const [cities] = await connection.execute(
-            `SELECT 
-                COALESCE(city, destination) as name, 
-                COUNT(*) as count 
-            FROM search_history 
-            WHERE type = ? AND (city IS NOT NULL OR (destination NOT LIKE '%酒店%' AND destination NOT LIKE '%饭店%' AND destination NOT LIKE '%宾馆%')) 
-            GROUP BY COALESCE(city, destination) 
-            ORDER BY count DESC 
-            LIMIT 10`,
-            ['city']
-        );
-        
-        // 关闭连接
-        await connection.end();
-        
+        const result = db.exec(`
+            SELECT
+                COALESCE(city, destination) as name,
+                COUNT(*) as count
+            FROM search_history
+            WHERE type = 'city' AND (city IS NOT NULL OR (destination NOT LIKE '%酒店%' AND destination NOT LIKE '%饭店%' AND destination NOT LIKE '%宾馆%'))
+            GROUP BY COALESCE(city, destination)
+            ORDER BY count DESC
+            LIMIT 10
+        `);
+
+        let cities = [];
+        if (result.length > 0 && result[0].values.length > 0) {
+            const columns = result[0].columns;
+            cities = result[0].values.map(row => {
+                const obj = {};
+                columns.forEach((col, i) => obj[col] = row[i]);
+                return obj;
+            });
+        }
+
         res.json({ success: true, cities });
     } catch (error) {
         console.error('获取热门城市搜索错误:', error);
