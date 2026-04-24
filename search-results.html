@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">干就完了 - 酒店比价平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/zh.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/airbnb.min.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components/header.css">
+    <link rel="stylesheet" href="css/components/search.css">
+    <link rel="stylesheet" href="css/components/hotel.css">
+    <link rel="stylesheet" href="css/components/modal.css">
+    <link rel="stylesheet" href="css/components/footer.css">
+    <script src="https://cdn.jsdelivr.net/npm/i18next@26.0.6/i18next.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/i18next-http-backend@3.0.5/i18nextHttpBackend.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector@8.2.1/i18nextBrowserLanguageDetector.min.js"></script>
+    <script src="js/image-config.js"></script>
+    <style>
+        /* 顶部空间 */
+        .top-space {
+            padding: 30px 0;
+            background: #f8f9fa;
+            margin-bottom: 20px;
+        }
+        
+        /* 返回按钮 */
+        .back-btn {
+            margin-top: 10px;
+            position: relative;
+            z-index: 1000;
+        }
+        
+        /* 平台价格样式 */
+        .platform-price {
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 4px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .platform-price:hover {
+            background: #e9ecef;
+        }
+        
+        .platform-price.best-price {
+            background: #e6f7ff;
+            border-left: 4px solid #1890ff;
+        }
+        
+        /* 筛选和排序样式 */
+        .filter-bar {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            padding: 12px;
+        }
+        
+        /* 星级样式 */
+        .stars {
+            color: #ffd700;
+        }
+        
+        /* 距离和评价样式 */
+        .hotel-meta {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* 价格标签样式 */
+        .price-tag {
+            font-weight: bold;
+            color: #ff4d4f;
+        }
+        
+        /* 筛选按钮样式 */
+        .filter-btn {
+            background: white;
+            border: 1px solid #d9d9d9;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 8px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .filter-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        
+        .filter-btn.active {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+        
+        /* 搜索结果统计 */
+        .result-count {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+        
+        /* 价格信息 */
+        .price-info {
+            padding: 16px;
+            border-left: 1px solid #e0e0e0;
+        }
+        
+        .platform-price {
+            margin-bottom: 8px;
+        }
+        
+        .platform-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .platform-price-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .best-price-tag {
+            background: #ff4d4f;
+            color: white;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        
+        /* 筛选栏布局 */
+        .filter-section {
+            margin-right: 20px;
+        }
+        
+        .filter-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部空间 -->
+    <div class="top-space">
+        <!-- 返回按钮 -->
+        <div class="container mx-auto px-4 py-2">
+            <a href="index.html" class="btn btn-outline-primary back-btn">
+                <i class="fas fa-arrow-left mr-2"></i> 返回首页
+            </a>
+        </div>
+    </div>
+
+    <!-- 搜索框区域 -->
+    <div id="search"></div>
+
+    <!-- 主内容 -->
+    <main class="container mx-auto px-4 py-4">
+        <!-- 筛选和排序 -->
+        <div class="filter-bar">
+            <div class="d-flex flex-wrap align-items-center">
+                <div class="filter-section d-flex align-items-center mb-2">
+                    <span class="filter-section-title">排序方式：</span>
+                    <button class="filter-btn active">默认</button>
+                    <button class="filter-btn">价格从低到高</button>
+                    <button class="filter-btn">评分从高到低</button>
+                    <button class="filter-btn">距离从近到远</button>
+                </div>
+                <div class="filter-section d-flex align-items-center mb-2">
+                    <span class="filter-section-title">价格：</span>
+                    <button class="filter-btn">不限</button>
+                    <button class="filter-btn">¥0-¥500</button>
+                    <button class="filter-btn">¥500-¥1000</button>
+                    <button class="filter-btn">¥1000+</button>
+                </div>
+                <div class="filter-section d-flex align-items-center mb-2">
+                    <span class="filter-section-title">位置：</span>
+                    <button class="filter-btn">不限</button>
+                    <button class="filter-btn">市中心</button>
+                    <button class="filter-btn">机场附近</button>
+                    <button class="filter-btn">景点附近</button>
+                </div>
+                <div class="filter-section d-flex align-items-center mb-2">
+                    <span class="filter-section-title">设施：</span>
+                    <button class="filter-btn">免费Wi-Fi</button>
+                    <button class="filter-btn">停车场</button>
+                    <button class="filter-btn">游泳池</button>
+                    <button class="filter-btn">健身房</button>
+                </div>
+                <div class="filter-section d-flex align-items-center mb-2">
+                    <span class="filter-section-title">星级：</span>
+                    <button class="filter-btn">不限</button>
+                    <button class="filter-btn">3星及以上</button>
+                    <button class="filter-btn">4星及以上</button>
+                    <button class="filter-btn">5星</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 搜索结果统计 -->
+        <div class="result-count">
+            <p class="mb-0" id="resultCount">我们在 城市 找到 0 家酒店</p>
+        </div>
+        
+        <!-- 搜索结果 -->
+        <div id="resultsContainer" class="hidden">
+            <!-- 酒店卡片将在这里动态添加 -->
+        </div>
+        
+        <!-- 空状态 -->
+        <div id="emptyState" class="bg-white rounded-lg shadow-sm p-12 text-center hidden">
+            <i class="fas fa-hotel text-4xl text-gray-400 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">未找到酒店</h3>
+            <p class="text-gray-600 mb-6">请尝试调整搜索条件</p>
+            <a href="index.html" class="btn btn-primary">返回首页</a>
+        </div>
+    </main>
+    
+    <!-- 比较按钮 -->
+    <div class="compare-btn disabled" id="compareBtn">
+        <i class="fas fa-balance-scale mr-2"></i> 比较酒店 (0)
+    </div>
+
+    <!-- 模态框 -->
+    <div id="modals"></div>
+
+    <!-- 页脚 -->
+    <div id="footer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="js/main.js"></script>
+    <script type="module">
+        // 导入模块
+        import searchModule from './js/modules/search.js';
+        import datepickerModule from './js/modules/datepicker.js';
+        import guestsModule from './js/modules/guests.js';
+        import userModule from './js/modules/user.js';
+        import favoritesModule from './js/modules/favorites.js';
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 解析URL参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const city = urlParams.get('city');
+            const hotel = urlParams.get('hotel');
+            const checkIn = urlParams.get('checkIn');
+            const checkOut = urlParams.get('checkOut');
+            const guests = urlParams.get('guests');
+            
+            // 等待组件加载完成后初始化
+            setTimeout(() => {
+                // 初始化搜索栏
+                initSearchBar(city, hotel, checkIn, checkOut, guests);
+                
+                // 如果有搜索参数，自动搜索
+                if (city) {
+                    // 更新搜索结果统计
+                    document.getElementById('resultCount').textContent = `我们在 ${city} 找到 X 家酒店`;
+                    
+                    // 执行搜索
+                    setTimeout(() => {
+                        searchHotels(city, hotel, checkIn, checkOut, guests);
+                    }, 500);
+                }
+            }, 200);
+        });
+        
+        // 初始化搜索栏
+        function initSearchBar(city, hotel, checkIn, checkOut, guests) {
+            // 填充搜索框值
+            if (city) {
+                const cityInput = document.getElementById('city');
+                if (cityInput) {
+                    cityInput.value = city;
+                }
+            }
+            
+            if (hotel) {
+                const hotelInput = document.getElementById('hotel');
+                if (hotelInput) {
+                    hotelInput.value = hotel;
+                }
+            }
+            
+            // 初始化日期选择器
+            if (checkIn && checkOut) {
+                const dateDisplay = document.getElementById('dateDisplay');
+                if (dateDisplay) {
+                    const checkInDate = new Date(checkIn);
+                    const checkOutDate = new Date(checkOut);
+                    const checkInStr = `${checkInDate.getFullYear()}年${checkInDate.getMonth() + 1}月${checkInDate.getDate()}日`;
+                    const checkOutStr = `${checkOutDate.getFullYear()}年${checkOutDate.getMonth() + 1}月${checkOutDate.getDate()}日`;
+                    dateDisplay.textContent = `${checkInStr} - ${checkOutStr}`;
+                }
+            }
+            
+            // 初始化旅客选择
+            if (guests) {
+                const guestsDisplay = document.getElementById('guestsDisplay');
+                if (guestsDisplay) {
+                    guestsDisplay.textContent = guests;
+                }
+            }
+        }
+        
+        // 搜索酒店
+        async function searchHotels(city, hotel, checkIn, checkOut, guests) {
+            try {
+                // 模拟API请求
+                const hotels = await mockHotelData(city, hotel);
+                
+                // 显示搜索结果
+                displayResults(hotels);
+            } catch (error) {
+                console.error('搜索酒店失败:', error);
+                document.getElementById('emptyState').classList.remove('hidden');
+            }
+        }
+        
+        // 模拟酒店数据
+        function mockHotelData(city, hotel) {
+            return new Promise((resolve) => {
+                // 随机延迟，模拟网络请求
+                const delay = Math.random() * 5000 + 500; // 500ms到5500ms之间
+                setTimeout(() => {
+                    // 根据城市生成不同的酒店数据
+                    const cityHotels = {
+                        '北京': [
+                            {
+                                id: 1,
+                                name: '北京丽思卡尔顿酒店',
+                                address: '北京市朝阳区建国路87号',
+                                rating: 8.7,
+                                reviewCount: 16138,
+                                distance: '1.9公里',
+                                stars: 5,
+                                price: 1288,
+                                image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=luxury%20hotel%20beijing%2C%20modern%20design%2C%20city%20view&image_size=landscape_4_3',
+                                platforms: [
+                                    { name: 'Booking.com', price: 1288, link: '#' },
+                                    { name: 'Agoda', price: 1250, link: '#' },
+                                    { name: '携程', price: 1319, link: '#' }
+                                ]
+                            },
+                            {
+                                id: 2,
+                                name: '北京国贸大酒店',
+                                address: '北京市朝阳区建国门外大街1号',
+                                rating: 8.4,
+                                reviewCount: 17115,
+                                distance: '2.5公里',
+                                stars: 5,
+                                price: 1088,
+                                image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=business%20hotel%20beijing%2C%20modern%20tower%2C%20city%20center&image_size=landscape_4_3',
+                                platforms: [
+                                    { name: 'Trip.com', price: 1088, link: '#' },
+                                    { name: '美团', price: 1050, link: '#' }
+                                ]
+                            },
+                            {
+                                id: 3,
+                                name: '北京王府井希尔顿酒店',
+                                address: '北京市东城区王府井东街8号',
+                                rating: 8.3,
+                                reviewCount: 34413,
+                                distance: '4.0公里',
+                                stars: 5,
+                                price: 988,
+                                image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hilton%20hotel%20beijing%2C%20luxury%20exterior%2C%20shopping%20district&image_size=landscape_4_3',
+                                platforms: [
+                                    { name: 'Trip.com', price: 988, link: '#' },
+                                    { name: 'Agoda', price: 950, link: '#' },
+                                    { name: '飞猪', price: 1020, link: '#' }
+                                ]
+                            }
+                        ],
+                        '上海': [
+                            {
+                                id: 1,
+                                name: '上海浦东香格里拉大酒店',
+                                address: '上海市浦东新区富城路33号',
+                                rating: 8.7,
+                                reviewCount: 16138,
+                                distance: '1.9公里',
+                                stars: 5,
+                                price: 1588,
+                                image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=shangri-la%20hotel%20shanghai%2C%20luxury%20harbor%20view&image_size=landscape_4_3',
+                                platforms: [
+                                    { name: 'Booking.com', price: 1588, link: '#' },
+                                    { name: 'Agoda', price: 1550, link: '#' },
+                                    { name: '携程', price: 1620, link: '#' }
+                                ]
+                            },
+                            {
+                                id: 2,
+                                name: '上海外滩华尔道夫酒店',
+                                address: '上海市黄浦区中山东一路2号',
+                                rating: 8.4,
+                                reviewCount: 17115,
+                                distance: '2.5公里',
+                                stars: 5,
+                                price: 1888,
+                                image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=waldorf%20astoria%20shanghai%2C%20luxury%20heritage%20building&image_size=landscape_4_3',
+                                platforms: [
+                                    { name: 'Trip.com', price: 1888, link: '#' },
+                                    { name: '美团', price: 1850, link: '#' }
+                                ]
+                            }
+                        ],
+                        '深圳': [
+                            {
+                                id: 1,
+                                name: '深圳四季酒店',
+                                address: '深圳市福田区福华三路138号',
+                                rating: 8.7,
+                                reviewCount: 16138,
+                                distance: '1.9公里',
+                                stars: 5,
+                                price: 1088,
+                                image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=four%20seasons%20hotel%20shenzhen%2C%20modern%20luxury&image_size=landscape_4_3',
+                                platforms: [
+                                    { name: 'Booking.com', price: 1088, link: '#' },
+                                    { name: 'Agoda', price: 1050, link: '#' },
+                                    { name: '携程', price: 1120, link: '#' }
+                                ]
+                            },
+                            {
+                                id: 2,
+                                name: '深圳鹏瑞莱佛士酒店',
+                                address: '深圳市南山区海德三道88号',
+                                rating: 8.4,
+                                reviewCount: 17115,
+                                distance: '2.5公里',
+                                stars: 5,
+                                price: 1288,
+                                image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=raffles%20hotel%20shenzhen%2C%20luxury%20high-rise&image_size=landscape_4_3',
+                                platforms: [
+                                    { name: 'Trip.com', price: 1288, link: '#' },
+                                    { name: '美团', price: 1250, link: '#' }
+                                ]
+                            },
+                            {
+                                id: 3,
+                                name: '深圳福田香格里拉大酒店',
+                                address: '深圳市福田区益田路4088号',
+                                rating: 8.3,
+                                reviewCount: 34413,
+                                distance: '4.0公里',
+                                stars: 5,
+                                price: 988,
+                                image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=shangri-la%20hotel%20shenzhen%2C%20business%20luxury&image_size=landscape_4_3',
+                                platforms: [
+                                    { name: 'Trip.com', price: 988, link: '#' },
+                                    { name: 'Agoda', price: 950, link: '#' },
+                                    { name: '飞猪', price: 1020, link: '#' }
+                                ]
+                            }
+                        ]
+                    };
+                    
+                    // 获取城市对应的酒店数据，如果没有则返回空数组
+                    const hotels = cityHotels[city] || [];
+                    resolve(hotels);
+                }, delay);
+            });
+        }
+        
+        // 显示搜索结果
+        function displayResults(hotels) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (hotels.length > 0) {
+                // 显示结果容器
+                if (resultsContainer) {
+                    resultsContainer.classList.remove('hidden');
+                    
+                    // 生成酒店卡片
+                    let hotelHTML = '';
+                    hotels.forEach((hotel, index) => {
+                        // 找到最低价格
+                        const minPrice = Math.min(...hotel.platforms.map(p => p.price));
+                        
+                        hotelHTML += `
+                            <div class="col-md-12 mb-4">
+                                <div class="hotel-card">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="hotel-image">
+                                                <img src="${hotel.image}" alt="${hotel.name}">
+                                                <div class="hotel-rating">${hotel.rating}</div>
+                                                <button class="btn btn-sm btn-outline-danger favorite-btn" data-hotel-id="${hotel.id}" data-hotel-name="${hotel.name}" data-hotel-address="${hotel.address}" data-hotel-price="${hotel.price}" data-hotel-image="${hotel.image}">
+                                                    <i class="far fa-heart"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="hotel-info">
+                                                <h3 class="hotel-name">${hotel.name}</h3>
+                                                <p class="hotel-address">${hotel.address}</p>
+                                                <div class="hotel-meta">
+                                                    <span class="mr-3"><i class="fas fa-star stars"></i> ${hotel.rating} (${hotel.reviewCount}条评价)</span>
+                                                    <span><i class="fas fa-map-marker-alt"></i> 距离市中心 ${hotel.distance}</span>
+                                                </div>
+                                                <div class="mt-3">
+                                                    <button class="btn btn-sm btn-outline-primary view-details-btn">查看详情</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="price-info">
+                                                <h4 class="mb-3">比价结果</h4>
+                                                ${hotel.platforms.map(platform => `
+                                                    <div class="platform-price ${platform.price === minPrice ? 'best-price' : ''}">
+                                                        <span class="platform-name">${platform.name}</span>
+                                                        <span class="platform-price-value">¥${platform.price}</span>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    resultsContainer.innerHTML = hotelHTML;
+                    
+                    // 初始化收藏按钮
+                    if (window.favorites) {
+                        window.favorites.init();
+                    }
+                    
+                    // 初始化查看详情按钮
+                    initViewDetails();
+                }
+            } else {
+                // 显示空状态
+                if (emptyState) {
+                    emptyState.classList.remove('hidden');
+                }
+            }
+        }
+        
+        // 查看详情功能
+        function initViewDetails() {
+            const viewDetailsBtns = document.querySelectorAll('.view-details-btn');
+            
+            if (!viewDetailsBtns.length) return;
+            
+            // 为每个查看详情按钮添加点击事件
+            viewDetailsBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 获取酒店卡片
+                    const hotelCard = this.closest('.hotel-card');
+                    if (!hotelCard) return;
+                    
+                    // 获取酒店信息
+                    const hotelName = hotelCard.querySelector('.hotel-name').textContent;
+                    const hotelAddress = hotelCard.querySelector('.hotel-address').textContent;
+                    const hotelPrice = hotelCard.querySelector('.platform-price-value').textContent.replace(/[^0-9]/g, '');
+                    const hotelImage = hotelCard.querySelector('.hotel-image img').src;
+                    const hotelId = hotelCard.querySelector('.favorite-btn').getAttribute('data-hotel-id');
+                    
+                    // 构建详情页URL
+                    const detailUrl = `hotel-detail.html?id=${hotelId}&name=${encodeURIComponent(hotelName)}&address=${encodeURIComponent(hotelAddress)}&price=${hotelPrice}&image=${encodeURIComponent(hotelImage)}`;
+                    
+                    // 在新标签页中打开详情页
+                    window.open(detailUrl, '_blank');
+                });
+            });
+        }
+        
+        // 筛选按钮点击事件
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 移除同组其他按钮的active类
+                    const siblings = Array.from(this.parentElement.children).filter(child => 
+                        child.classList.contains('filter-btn')
+                    );
+                    siblings.forEach(sibling => sibling.classList.remove('active'));
+                    
+                    // 添加当前按钮的active类
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

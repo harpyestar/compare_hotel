@@ -42,7 +42,11 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('components/footer.html').then(response => response.text())
     ]).then(([headerHtml, searchHtml, modalHtml, footerHtml]) => {
         // 渲染组件
-        document.getElementById('header').innerHTML = headerHtml;
+        const headerElement = document.getElementById('header');
+        if (headerElement) {
+            headerElement.innerHTML = headerHtml;
+        }
+        
         document.getElementById('search').innerHTML = searchHtml;
         document.getElementById('modals').innerHTML = modalHtml;
         document.getElementById('footer').innerHTML = footerHtml;
@@ -312,12 +316,20 @@ function initSearchForm() {
         }
         
         // 执行搜索
+        // 构建搜索结果页面URL
+        const searchParams = new URLSearchParams();
+        searchParams.append('city', city);
         if (hotel) {
-            alert(`搜索: ${city} ${hotel}, 日期: ${checkIn} 至 ${checkOut}`);
-        } else {
-            alert(`搜索: ${city}, 日期: ${checkIn} 至 ${checkOut}`);
+            searchParams.append('hotel', hotel);
         }
-        // 这里可以添加实际的搜索逻辑
+        searchParams.append('checkIn', checkIn);
+        searchParams.append('checkOut', checkOut);
+        searchParams.append('guests', guestsText);
+        
+        const searchUrl = `search-results.html?${searchParams.toString()}`;
+        
+        // 在当前页面跳转到搜索结果
+        window.location.href = searchUrl;
     });
 }
 

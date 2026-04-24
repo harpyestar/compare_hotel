@@ -77,13 +77,19 @@
 }
 
 /* 搜索建议样式 */
-#suggestions {
+#citySuggestions, #hotelSuggestions {
     max-height: 240px;
     overflow-y: auto;
     z-index: 1000;
+    position: absolute;
     top: 100%;
     left: 0;
+    right: 0;
     margin-top: 5px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .suggestion-item {
