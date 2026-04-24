@@ -352,12 +352,14 @@ function updateHotelList(hotels) {
     if (!hotelList) return;
     
     if (hotels.length > 0) {
+        // 限制显示6个酒店（两行，每行3个）
+        const displayHotels = hotels.slice(0, 6);
+        
         // 生成酒店列表
         let hotelHTML = '';
-        hotels.forEach((hotel, index) => {
-            // 使用酒店名称作为关键词生成相关图片
-            const hotelKeyword = encodeURIComponent(hotel.name);
-            const prompt = encodeURIComponent(`modern hotel exterior, luxury building, city view`);
+        displayHotels.forEach((hotel, index) => {
+            // 使用预定义的酒店图片轮询
+            const hotelImage = getHotelImage(index);
             hotelHTML += `
                 <div class="col-md-4">
                     <div class="hotel-card">
@@ -365,13 +367,13 @@ function updateHotelList(hotels) {
                             <input type="checkbox" class="form-check-input" id="hotel${index + 1}">
                         </div>
                         <div class="hotel-image">
-                            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${prompt}&image_size=landscape_4_3" alt="${hotel.name}">
+                            <img src="${hotelImage}" alt="${hotel.name}">
                             <div class="hotel-rating">4.5</div>
                         </div>
                         <div class="hotel-info">
                             <div class="d-flex justify-content-between align-items-start">
                                 <h3 class="hotel-name">${hotel.name}</h3>
-                                <button class="btn btn-sm btn-outline-danger favorite-btn" data-hotel-id="${index + 1}" data-hotel-name="${hotel.name}" data-hotel-address="" data-hotel-price="0" data-hotel-image="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${prompt}&image_size=landscape_4_3">
+                                <button class="btn btn-sm btn-outline-danger favorite-btn" data-hotel-id="${index + 1}" data-hotel-name="${hotel.name}" data-hotel-address="" data-hotel-price="0" data-hotel-image="${hotelImage}">
                                     <i class="far fa-heart"></i>
                                 </button>
                             </div>
@@ -403,18 +405,20 @@ function updateCityList(cities) {
     if (!cityList) return;
     
     if (cities.length > 0) {
+        // 限制显示8个城市（两行，每行4个）
+        const displayCities = cities.slice(0, 8);
+        
         // 生成城市列表
         let cityHTML = `
             <div class="col-md-12">
                 <div class="city-grid">
         `;
-        cities.forEach((city, index) => {
-            // 使用城市名称作为关键词生成相关风景图片
-            const cityKeyword = encodeURIComponent(city.name);
-            const prompt = encodeURIComponent(`${city.name} city landscape, scenic view, beautiful`);
+        displayCities.forEach((city, index) => {
+            // 使用预定义的城市图片，优先使用匹配的，否则使用默认的
+            const cityImage = getCityImage(city.name, index);
             cityHTML += `
                 <div class="city-item">
-                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${prompt}&image_size=landscape_4_3" alt="${city.name}">
+                    <img src="${cityImage}" alt="${city.name}">
                     <h4>${city.name}</h4>
                     <p class="text-sm text-muted">搜索次数: ${city.count}</p>
                 </div>

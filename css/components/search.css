@@ -144,8 +144,9 @@
 
 .city-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 20px;
+    overflow: visible;
 }
 
 .city-item {
@@ -191,7 +192,7 @@
     }
     
     .city-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 10px;
     }
     
@@ -201,6 +202,6 @@
     
     .city-item h4 {
         padding: 10px;
-        font-size: 0.9rem;
+        font-size: 14px;
     }
 }
