@@ -1,6 +1,6 @@
 // 图片配置文件
 const imageConfig = {
-    // 酒店图片 - 预定义15张不同风格的酒店图片
+    // 酒店图片 - 预定义35张不同风格的酒店图片
     hotelImages: [
         'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop',
         'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&h=600&fit=crop',
@@ -16,7 +16,27 @@ const imageConfig = {
         'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=600&fit=crop',
         'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop',
         'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&h=600&fit=crop'
+        'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800&h=600&fit=crop'
     ],
 
     // 城市图片 - 预定义20个城市的风景图片
