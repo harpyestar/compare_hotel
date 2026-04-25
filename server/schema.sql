@@ -45,3 +45,30 @@ CREATE TABLE IF NOT EXISTS favorites (
     UNIQUE KEY unique_user_hotel (username, hotel_id),
     FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
 );
+
+-- 创建价格详情表
+CREATE TABLE IF NOT EXISTS price_detail (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    hotel_id VARCHAR(50) NOT NULL,
+    platform VARCHAR(50) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    distance DECIMAL(10,2) NOT NULL,
+    rating DECIMAL(3,1) NOT NULL
+);
+
+-- 创建城市表
+CREATE TABLE IF NOT EXISTS city (
+    city_id INT AUTO_INCREMENT PRIMARY KEY,
+    province_id INT NOT NULL,
+    city_name VARCHAR(50) NOT NULL,
+    city_latitude DECIMAL(10,6) NOT NULL,
+    city_longitude DECIMAL(10,6) NOT NULL
+);
+
+-- 创建省份表
+CREATE TABLE IF NOT EXISTS provinces (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    province_code VARCHAR(10) UNIQUE NOT NULL,
+    province_name VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

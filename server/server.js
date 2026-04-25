@@ -109,6 +109,9 @@ const cities = [
     // 新疆维吾尔自治区
     '乌鲁木齐', '克拉玛依', '吐鲁番', '哈密', '阿克苏', '喀什', '和田', '昌吉', '博尔塔拉', '巴音郭楞', '克孜勒苏', '伊犁', '塔城', '阿勒泰', '石河子', '阿拉尔', '图木舒克', '五家渠', '北屯', '铁门关', '双河', '可克达拉', '昆玉',
     
+    // 内蒙古自治区
+    '呼和浩特', '包头', '乌海', '赤峰', '通辽', '鄂尔多斯', '呼伦贝尔', '巴彦淖尔', '乌兰察布', '兴安', '锡林郭勒', '阿拉善',
+    
     // 台湾省
     '台北', '高雄', '台南', '台中', '桃园', '新竹', '嘉义',
     
@@ -143,79 +146,11 @@ function generateSessionId() {
 // 初始化数据库
 async function initDatabase() {
     try {
-        const dataDir = path.join(__dirname, '..', 'data');
-        if (!fs.existsSync(dataDir)) {
-            fs.mkdirSync(dataDir, { recursive: true });
-        }
-
         const SQL = await initSqlJs();
-
-        if (fs.existsSync(dbPath)) {
-            const fileBuffer = fs.readFileSync(dbPath);
-            db = new SQL.Database(fileBuffer);
-        } else {
-            db = new SQL.Database();
-        }
-
+        const fileBuffer = fs.readFileSync(dbPath);
+        db = new SQL.Database(fileBuffer);
         dbConnected = true;
         console.log('数据库连接成功');
-
-        db.run(`
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-        console.log('用户表创建成功');
-
-        db.run(`
-            CREATE TABLE IF NOT EXISTS sessions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                session_id TEXT UNIQUE NOT NULL,
-                username TEXT NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
-            )
-        `);
-        console.log('会话表创建成功');
-
-        db.run(`
-            CREATE TABLE IF NOT EXISTS search_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL,
-                destination TEXT NOT NULL,
-                city TEXT,
-                hotel TEXT,
-                type TEXT NOT NULL DEFAULT 'city',
-                check_in DATE NOT NULL,
-                check_out DATE NOT NULL,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
-            )
-        `);
-        console.log('搜索历史表创建成功');
-
-        db.run(`
-            CREATE TABLE IF NOT EXISTS favorites (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL,
-                hotel_id TEXT NOT NULL,
-                hotel_name TEXT NOT NULL,
-                hotel_address TEXT NOT NULL,
-                hotel_price INTEGER NOT NULL,
-                hotel_image TEXT NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(username, hotel_id),
-                FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
-            )
-        `);
-        console.log('收藏酒店表创建成功');
-
-        saveDatabase();
-        console.log('数据库初始化完成');
-
     } catch (error) {
         console.error('数据库初始化错误:', error);
         console.error('警告: 数据库连接失败，用户认证、搜索历史和收藏酒店功能将不可用');
@@ -654,6 +589,49 @@ app.get('/api/hot-cities', async (req, res) => {
 const staticPath = path.join(__dirname, '..');
 console.log('静态文件路径:', staticPath);
 app.use(express.static(staticPath));
+
+// 获取省份和城市关联数据API
+app.get('/api/provinces-cities', async (req, res) => {
+    if (!dbConnected) {
+        return res.json({ success: false, message: req.t('messages.databaseError'), data: [] });
+    }
+
+    try {
+        // 获取所有省份
+        const provincesResult = db.exec('SELECT id, province_name FROM provinces ORDER BY id');
+        let provinces = [];
+        if (provincesResult.length > 0 && provincesResult[0].values.length > 0) {
+            provinces = provincesResult[0].values.map(row => ({
+                id: row[0],
+                name: row[1],
+                cities: []
+            }));
+        }
+
+        // 获取所有城市并按省份分组
+        const citiesResult = db.exec('SELECT c.city_id, c.city_name, c.city_latitude, c.city_longitude, c.province_id, p.province_name FROM city c LEFT JOIN provinces p ON c.province_id = p.id ORDER BY c.province_id, c.city_name');
+        if (citiesResult.length > 0 && citiesResult[0].values.length > 0) {
+            citiesResult[0].values.forEach(row => {
+                const cityId = row[0];
+                const cityName = row[1];
+                const cityLat = row[2];
+                const cityLng = row[3];
+                const provinceId = row[4];
+                const provinceName = row[5];
+
+                const province = provinces.find(p => p.id == provinceId);
+                if (province) {
+                    province.cities.push({ id: cityId, name: cityName, lat: cityLat, lng: cityLng });
+                }
+            });
+        }
+
+        res.json({ success: true, data: provinces });
+    } catch (error) {
+        console.error('获取省份城市数据错误:', error);
+        return res.json({ success: false, message: '获取数据失败', data: [] });
+    }
+});
 
 // 根路径重定向到index.html
 app.get('/', (req, res) => {
