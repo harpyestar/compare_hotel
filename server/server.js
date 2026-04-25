@@ -640,6 +640,223 @@ app.get('/', (req, res) => {
     res.sendFile(indexPath);
 });
 
+// 搜索酒店API
+app.get('/api/search', async (req, res) => {
+    try {
+        console.log('接收到搜索请求:', req.query);
+        const { city, page = 1, limit = 10, sort = 'default' } = req.query;
+        
+        if (!city) {
+            console.log('缺少城市参数');
+            return res.json({ success: false, message: '请提供城市名称' });
+        }
+        
+        if (!dbConnected) {
+            console.log('数据库未连接');
+            return res.json({ success: false, message: '数据库未连接' });
+        }
+        
+        // 对city参数进行URL解码
+        const decodedCity = decodeURIComponent(city);
+        console.log('解码后的城市名称:', decodedCity);
+        
+        // 确保参数类型正确
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        console.log('解析后的参数:', { city: decodedCity, page: pageNum, limit: limitNum, sort });
+        
+        // 计算偏移量
+        const offset = (pageNum - 1) * limitNum;
+        console.log('计算偏移量:', offset);
+        
+        // 首先获取符合条件的酒店ID列表，按指定排序，并进行分页
+        // 使用简单的查询方式，避免复杂的子查询
+        let hotelIdsSql = `
+            SELECT DISTINCT h.hotel_id
+            FROM hotel_info h
+            JOIN price_detail p ON h.hotel_id = p.hotel_id
+            WHERE h.city_name LIKE '%${decodedCity}%'
+        `;
+        
+        // 添加排序
+        switch (sort) {
+            case 'price_asc':
+                hotelIdsSql += ' ORDER BY p.price ASC';
+                break;
+            case 'price_desc':
+                hotelIdsSql += ' ORDER BY p.price DESC';
+                break;
+            case 'rating_asc':
+                hotelIdsSql += ' ORDER BY p.rating ASC';
+                break;
+            case 'rating_desc':
+                hotelIdsSql += ' ORDER BY p.rating DESC';
+                break;
+            case 'distance_asc':
+                hotelIdsSql += ' ORDER BY p.distance ASC';
+                break;
+            case 'distance_desc':
+                hotelIdsSql += ' ORDER BY p.distance DESC';
+                break;
+            default:
+                hotelIdsSql += ' ORDER BY p.price ASC';
+        }
+        
+        // 添加分页
+        hotelIdsSql += ` LIMIT ${limitNum} OFFSET ${offset}`;
+        console.log('执行酒店ID查询:', hotelIdsSql);
+        
+        try {
+            // 执行酒店ID查询
+            console.log('开始执行酒店ID查询...');
+            
+            // 使用prepare方法执行查询
+            const stmt = db.prepare(hotelIdsSql);
+            const hotelIds = [];
+            
+            while (stmt.step()) {
+                const row = stmt.get();
+                console.log('获取到酒店ID:', row[0]);
+                hotelIds.push(row[0]);
+            }
+            stmt.free();
+            
+            console.log('酒店ID查询完成，获取到', hotelIds.length, '个酒店ID');
+            console.log('酒店ID列表:', hotelIds);
+            
+            if (hotelIds.length === 0) {
+                console.log('查询结果为空');
+                // 直接返回空数据
+                res.json({
+                    success: true,
+                    data: {
+                        hotels: [],
+                        total: 0,
+                        page: pageNum,
+                        limit: limitNum,
+                        totalPages: 0
+                    }
+                });
+                return;
+            }
+            
+            try {
+                // 获取总记录数
+                console.log('开始获取总记录数...');
+                const countSql = `SELECT COUNT(DISTINCT hotel_id) as count FROM hotel_info WHERE city_name LIKE '%${decodedCity}%'`;
+                console.log('执行总记录数查询:', countSql);
+                
+                let totalCount = 0;
+                try {
+                    // 使用prepare方法执行查询
+                    const stmt = db.prepare(countSql);
+                    
+                    if (stmt.step()) {
+                        const row = stmt.get();
+                        console.log('总记录数查询结果:', row);
+                        totalCount = row[0];
+                    }
+                    stmt.free();
+                    
+                    console.log('总记录数查询执行完成');
+                } catch (error) {
+                    console.error('执行总记录数查询失败:', error);
+                    // 继续执行，使用默认值0
+                }
+                
+                console.log('总记录数:', totalCount);
+                
+                // 根据酒店ID查询详细信息和价格
+                console.log('开始查询酒店详细信息...');
+                const hotelDetailsSql = `
+                    SELECT h.hotel_id, h.chn_name3 as name, h.city_name, h.chn_address as address, 
+                           p.platform, p.price, p.distance, p.rating
+                    FROM hotel_info h
+                    JOIN price_detail p ON h.hotel_id = p.hotel_id
+                    WHERE h.hotel_id IN (${hotelIds.join(',')})
+                `;
+                console.log('执行酒店详细信息查询:', hotelDetailsSql);
+                
+                // 整理数据
+                const hotelsMap = new Map();
+                
+                try {
+                    // 使用prepare方法执行查询
+                    const stmt = db.prepare(hotelDetailsSql);
+                    
+                    console.log('开始整理数据...');
+                    let recordCount = 0;
+                    
+                    while (stmt.step()) {
+                        const row = stmt.get();
+                        recordCount++;
+                        console.log('处理记录:', row);
+                        const [hotel_id, name, city_name, address, platform, price, distance, rating] = row;
+                        
+                        if (!hotelsMap.has(hotel_id)) {
+                            hotelsMap.set(hotel_id, {
+                                id: hotel_id,
+                                name: name,
+                                address: address,
+                                rating: parseFloat(rating),
+                                distance: distance + '公里',
+                                platforms: []
+                            });
+                            console.log('创建新酒店:', hotel_id, name);
+                        }
+                        
+                        hotelsMap.get(hotel_id).platforms.push({
+                            name: platform,
+                            price: parseFloat(price),
+                            link: '#'
+                        });
+                        console.log('添加平台:', platform, price);
+                    }
+                    stmt.free();
+                    
+                    console.log('有酒店详细信息数据，共', recordCount, '条记录');
+                } catch (error) {
+                    console.error('执行酒店详细信息查询失败:', error);
+                    // 继续执行，返回空数据
+                }
+                
+                if (hotelsMap.size === 0) {
+                    console.log('没有酒店详细信息数据');
+                }
+                
+                const hotels = Array.from(hotelsMap.values());
+                console.log('整理完成，共', hotels.length, '家酒店');
+                console.log('第一家酒店:', hotels[0]);
+                if (hotels[0]) {
+                    console.log('第一家酒店的platforms:', hotels[0].platforms);
+                }
+                
+                res.json({
+                    success: true,
+                    data: {
+                        hotels: hotels,
+                        total: totalCount,
+                        page: pageNum,
+                        limit: limitNum,
+                        totalPages: Math.ceil(totalCount / limitNum)
+                    }
+                });
+                console.log('响应成功');
+            } catch (countError) {
+                console.error('获取总记录数失败:', countError);
+                res.json({ success: false, message: '获取总记录数失败' });
+            }
+        } catch (queryError) {
+            console.error('执行查询失败:', queryError);
+            res.json({ success: false, message: '执行查询失败' });
+        }
+        
+    } catch (error) {
+        console.error('搜索酒店失败:', error);
+        res.json({ success: false, message: '搜索失败' });
+    }
+});
+
 // 启动服务器
 const port = 3000;
 try {

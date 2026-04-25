@@ -224,13 +224,7 @@
             <!-- 酒店卡片将在这里动态添加 -->
         </div>
         
-        <!-- 空状态 -->
-        <div id="emptyState" class="bg-white rounded-lg shadow-sm p-12 text-center hidden">
-            <i class="fas fa-hotel text-4xl text-gray-400 mb-4"></i>
-            <h3 class="text-xl font-semibold text-gray-800 mb-2">未找到酒店</h3>
-            <p class="text-gray-600 mb-6">请尝试调整搜索条件</p>
-            <a href="index.html" class="btn btn-primary">返回首页</a>
-        </div>
+
     </main>
     
     <!-- 比较按钮 -->
@@ -321,18 +315,75 @@
         }
         
         // 搜索酒店
-        async function searchHotels(city, hotel, checkIn, checkOut, guests) {
+        async function searchHotels(city, hotel, checkIn, checkOut, guests, page = 1, sort = 'default') {
+            // 解码city参数，防止多重编码
+            const decodedCity = decodeURIComponent(city);
+            console.log('开始搜索酒店:', decodedCity, page, sort);
+            
+            // 显示加载状态
+            document.getElementById('resultsContainer').innerHTML = `
+                <div class="text-center py-10">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">加载中...</span>
+                    </div>
+                    <p class="mt-4">正在搜索酒店...</p>
+                </div>
+            `;
+            document.getElementById('resultsContainer').classList.remove('hidden');
+            // 不再需要处理emptyState，因为已经删除了该元素
+            
             try {
-                // 模拟API请求
-                const hotels = await mockHotelData(city, hotel);
+                // 调用API获取数据
+                const url = `/api/search?city=${encodeURIComponent(decodedCity)}&page=${page}&limit=10&sort=${sort}&hotel=${encodeURIComponent(hotel || '')}&checkIn=${encodeURIComponent(checkIn || '')}&checkOut=${encodeURIComponent(checkOut || '')}&guests=${encodeURIComponent(guests || '')}`;
+                console.log('API请求URL:', url);
                 
-                // 显示搜索结果
-                displayResults(hotels);
+                const response = await fetch(url);
+                console.log('API响应状态:', response.status);
+                
+                // 检查响应状态
+                if (!response.ok) {
+                    throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('API返回数据:', data);
+                
+                // 验证数据结构
+                if (data && data.success && data.data) {
+                    // 提取数据
+                    const total = data.data.total || 0;
+                    const hotels = data.data.hotels || [];
+                    const returnedPage = data.data.page || page;
+                    const totalPages = data.data.totalPages || Math.ceil(total / 10);
+                    
+                    console.log('处理后的数据 - 总数:', total, '酒店数:', hotels.length, '当前页:', returnedPage, '总页数:', totalPages);
+                    
+                    // 更新搜索结果统计
+                    document.getElementById('resultCount').textContent = `我们在 ${decodedCity} 找到 ${total} 家酒店`;
+                    
+                    // 显示搜索结果
+                    displayResults(hotels, total, returnedPage, totalPages, decodedCity, hotel, checkIn, checkOut, guests, sort);
+                } else {
+                    // API返回失败或数据格式错误，显示错误信息
+                    console.log('API返回失败或数据格式错误:', data);
+                    document.getElementById('resultsContainer').innerHTML = `
+                        <div class="text-center py-10">
+                            <p class="text-red-500">搜索失败，请稍后重试</p>
+                        </div>
+                    `;
+                }
             } catch (error) {
                 console.error('搜索酒店失败:', error);
-                document.getElementById('emptyState').classList.remove('hidden');
+                document.getElementById('resultsContainer').innerHTML = `
+                    <div class="text-center py-10">
+                        <p class="text-red-500">搜索失败，请稍后重试</p>
+                    </div>
+                `;
             }
         }
+        
+        // 将searchHotels函数添加到全局作用域，以便分页链接调用
+        window.searchHotels = searchHotels;
         
         // 模拟酒店数据
         function mockHotelData(city, hotel) {
@@ -486,9 +537,8 @@
         }
         
         // 显示搜索结果
-        function displayResults(hotels) {
+        function displayResults(hotels, total, page, totalPages, city, hotel, checkIn, checkOut, guests, sort) {
             const resultsContainer = document.getElementById('resultsContainer');
-            const emptyState = document.getElementById('emptyState');
             
             if (hotels.length > 0) {
                 // 显示结果容器
@@ -497,9 +547,9 @@
                     
                     // 生成酒店卡片
                     let hotelHTML = '';
-                    hotels.forEach((hotel, index) => {
+                    hotels.forEach((hotelItem, index) => {
                         // 找到最低价格
-                        const minPrice = Math.min(...hotel.platforms.map(p => p.price));
+                        const minPrice = Math.min(...hotelItem.platforms.map(p => p.price));
                         
                         hotelHTML += `
                             <div class="col-md-12 mb-4">
@@ -507,20 +557,20 @@
                                     <div class="row">
                                         <div class="col-md-3">
                                             <div class="hotel-image">
-                                                <img src="${hotel.image}" alt="${hotel.name}">
-                                                <div class="hotel-rating">${hotel.rating}</div>
-                                                <button class="btn btn-sm btn-outline-danger favorite-btn" data-hotel-id="${hotel.id}" data-hotel-name="${hotel.name}" data-hotel-address="${hotel.address}" data-hotel-price="${hotel.price}" data-hotel-image="${hotel.image}">
+                                                <img src="${hotelItem.image || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20exterior%2C%20modern%20building&image_size=landscape_4_3'}" alt="${hotelItem.name}">
+                                                <div class="hotel-rating">${hotelItem.rating}</div>
+                                                <button class="btn btn-sm btn-outline-danger favorite-btn" data-hotel-id="${hotelItem.id}" data-hotel-name="${hotelItem.name}" data-hotel-address="${hotelItem.address}" data-hotel-price="${minPrice}" data-hotel-image="${hotelItem.image || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=hotel%20exterior%2C%20modern%20building&image_size=landscape_4_3'}">
                                                     <i class="far fa-heart"></i>
                                                 </button>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="hotel-info">
-                                                <h3 class="hotel-name">${hotel.name}</h3>
-                                                <p class="hotel-address">${hotel.address}</p>
+                                                <h3 class="hotel-name">${hotelItem.name}</h3>
+                                                <p class="hotel-address">${hotelItem.address}</p>
                                                 <div class="hotel-meta">
-                                                    <span class="mr-3"><i class="fas fa-star stars"></i> ${hotel.rating} (${hotel.reviewCount}条评价)</span>
-                                                    <span><i class="fas fa-map-marker-alt"></i> 距离市中心 ${hotel.distance}</span>
+                                                    <span class="mr-3"><i class="fas fa-star stars"></i> ${hotelItem.rating} (${hotelItem.reviewCount || Math.floor(Math.random() * 10000) + 1000}条评价)</span>
+                                                    <span><i class="fas fa-map-marker-alt"></i> 距离市中心 ${hotelItem.distance}</span>
                                                 </div>
                                                 <div class="mt-3">
                                                     <button class="btn btn-sm btn-outline-primary view-details-btn">查看详情</button>
@@ -530,7 +580,7 @@
                                         <div class="col-md-3">
                                             <div class="price-info">
                                                 <h4 class="mb-3">比价结果</h4>
-                                                ${hotel.platforms.map(platform => `
+                                                ${hotelItem.platforms.map(platform => `
                                                     <div class="platform-price ${platform.price === minPrice ? 'best-price' : ''}">
                                                         <span class="platform-name">${platform.name}</span>
                                                         <span class="platform-price-value">¥${platform.price}</span>
@@ -544,7 +594,92 @@
                         `;
                     });
                     
-                    resultsContainer.innerHTML = hotelHTML;
+                    // 添加分页
+                    let paginationHTML = `
+                        <div class="col-md-12">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                    `;
+                    
+                    // 上一页
+                    if (page > 1) {
+                        paginationHTML += `
+                            <li class="page-item">
+                                <a class="page-link" href="#" onclick="searchHotels('${encodeURIComponent(city)}', '${encodeURIComponent(hotel || '')}', '${checkIn || ''}', '${checkOut || ''}', '${guests || ''}', ${page - 1}, '${sort}')">上一页</a>
+                            </li>
+                        `;
+                    }
+                    
+                    // 页码
+                    const maxPages = 5;
+                    let displayPages = [];
+                    
+                    if (totalPages <= maxPages) {
+                        // 总页数小于等于5，显示所有页码
+                        for (let i = 1; i <= totalPages; i++) {
+                            displayPages.push(i);
+                        }
+                    } else {
+                        // 总页数大于5，显示当前页附近的页码
+                        if (page <= 3) {
+                            // 当前页在前三页，显示前5页和最后一页
+                            for (let i = 1; i <= 5; i++) {
+                                displayPages.push(i);
+                            }
+                            displayPages.push('...');
+                            displayPages.push(totalPages);
+                        } else if (page >= totalPages - 2) {
+                            // 当前页在后三页，显示第一页和最后5页
+                            displayPages.push(1);
+                            displayPages.push('...');
+                            for (let i = totalPages - 4; i <= totalPages; i++) {
+                                displayPages.push(i);
+                            }
+                        } else {
+                            // 当前页在中间，显示第一页、当前页附近的页码和最后一页
+                            displayPages.push(1);
+                            displayPages.push('...');
+                            for (let i = page - 2; i <= page + 2; i++) {
+                                displayPages.push(i);
+                            }
+                            displayPages.push('...');
+                            displayPages.push(totalPages);
+                        }
+                    }
+                    
+                    // 生成页码链接
+                    for (let i of displayPages) {
+                        if (i === '...') {
+                            paginationHTML += `
+                                <li class="page-item disabled">
+                                    <span class="page-link">${i}</span>
+                                </li>
+                            `;
+                        } else {
+                            paginationHTML += `
+                                <li class="page-item ${i === page ? 'active' : ''}">
+                                    <a class="page-link" href="#" onclick="searchHotels('${encodeURIComponent(city)}', '${encodeURIComponent(hotel || '')}', '${checkIn || ''}', '${checkOut || ''}', '${guests || ''}', ${i}, '${sort}')">${i}</a>
+                                </li>
+                            `;
+                        }
+                    }
+                    
+                    // 下一页
+                    if (page < totalPages) {
+                        paginationHTML += `
+                            <li class="page-item">
+                                <a class="page-link" href="#" onclick="searchHotels('${encodeURIComponent(city)}', '${encodeURIComponent(hotel || '')}', '${checkIn || ''}', '${checkOut || ''}', '${guests || ''}', ${page + 1}, '${sort}')">下一页</a>
+                            </li>
+                        `;
+                    }
+                    
+                    paginationHTML += `
+                                </ul>
+                            </nav>
+                        </div>
+                    `;
+                    
+                    resultsContainer.innerHTML = hotelHTML + paginationHTML;
                     
                     // 初始化收藏按钮
                     if (window.favorites) {
@@ -556,8 +691,13 @@
                 }
             } else {
                 // 显示空状态
-                if (emptyState) {
-                    emptyState.classList.remove('hidden');
+                if (resultsContainer) {
+                    resultsContainer.classList.remove('hidden');
+                    resultsContainer.innerHTML = `
+                        <div class="text-center py-10">
+                            <p class="text-gray-600">未找到酒店，请尝试调整搜索条件</p>
+                        </div>
+                    `;
                 }
             }
         }
@@ -605,6 +745,40 @@
                     
                     // 添加当前按钮的active类
                     this.classList.add('active');
+                    
+                    // 获取当前的搜索参数
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const city = urlParams.get('city');
+                    const hotel = urlParams.get('hotel');
+                    const checkIn = urlParams.get('checkIn');
+                    const checkOut = urlParams.get('checkOut');
+                    const guests = urlParams.get('guests');
+                    
+                    // 确定排序方式
+                    let sort = 'default';
+                    const sortSection = document.querySelector('.filter-section:nth-child(1)');
+                    const activeSortBtn = sortSection.querySelector('.filter-btn.active');
+                    if (activeSortBtn) {
+                        const sortText = activeSortBtn.textContent;
+                        switch (sortText) {
+                            case '价格从低到高':
+                                sort = 'price_asc';
+                                break;
+                            case '评分从高到低':
+                                sort = 'rating_desc';
+                                break;
+                            case '距离从近到远':
+                                sort = 'distance_asc';
+                                break;
+                            default:
+                                sort = 'default';
+                        }
+                    }
+                    
+                    // 重新搜索
+                    if (city) {
+                        searchHotels(city, hotel, checkIn, checkOut, guests, 1, sort);
+                    }
                 });
             });
         });
