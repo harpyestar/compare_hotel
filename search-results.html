@@ -628,12 +628,29 @@
                                     <div class="col-md-3">
                                         <div class="price-info">
                                             <h4 class="mb-3">比价结果</h4>
-                                            ${hotelItem.platforms.map(platform => `
-                                                <div class="platform-price ${platform.price === minPrice ? 'best-price' : ''}">
-                                                    <span class="platform-name">${platform.name}</span>
-                                                    <span class="platform-price-value">¥${platform.price}</span>
-                                                </div>
-                                            `).join('')}
+                                            ${hotelItem.platforms.map(platform => {
+                                                // 根据平台名称生成对应的跳转链接
+                                                let platformUrl = '#';
+                                                
+                                                switch (platform.name) {
+                                                    case '携程':
+                                                        platformUrl = 'https://www.ctrip.com/';
+                                                        break;
+                                                    case '美团':
+                                                        platformUrl = 'https://passport.meituan.com/account/unitivelogin';
+                                                        break;
+                                                    case '飞猪':
+                                                        platformUrl = 'https://www.fliggy.com/';
+                                                        break;
+                                                }
+                                                
+                                                return `
+                                                    <a href="${platformUrl}" target="_blank" class="platform-price ${platform.price === minPrice ? 'best-price' : ''}">
+                                                        <span class="platform-name">${platform.name}</span>
+                                                        <span class="platform-price-value">¥${platform.price}</span>
+                                                    </a>
+                                                `;
+                                            }).join('')}
                                         </div>
                                     </div>
                                 </div>
