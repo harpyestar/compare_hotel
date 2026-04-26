@@ -429,7 +429,7 @@ function updateCityList(cities) {
             // 使用预定义的城市图片，优先使用匹配的，否则使用默认的
             const cityImage = getCityImage(city.name, index);
             cityHTML += `
-                <div class="city-item">
+                <div class="city-item" data-city="${city.name}">
                     <img src="${cityImage}" alt="${city.name}">
                     <h4>${city.name}</h4>
                     <p class="text-sm text-muted">搜索次数: ${city.count}</p>
@@ -441,6 +441,43 @@ function updateCityList(cities) {
             </div>
         `;
         cityList.innerHTML = cityHTML;
+        
+        // 为每个城市项添加点击事件
+        document.querySelectorAll('.city-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const cityName = this.getAttribute('data-city');
+                if (cityName) {
+                    // 填充城市到搜索框
+                    const cityInput = document.getElementById('city');
+                    if (cityInput) {
+                        cityInput.value = cityName;
+                    }
+                    
+                    // 设置日期为今天和明天
+                    const dateDisplay = document.getElementById('dateDisplay');
+                    if (dateDisplay) {
+                        const today = new Date();
+                        const tomorrow = new Date(today);
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        
+                        const formatDate = (date) => {
+                            const year = date.getFullYear();
+                            const month = date.getMonth() + 1;
+                            const day = date.getDate();
+                            return `${year}年${month}月${day}日`;
+                        };
+                        
+                        dateDisplay.textContent = `${formatDate(today)} - ${formatDate(tomorrow)}`;
+                    }
+                    
+                    // 提交搜索表单
+                    const searchForm = document.getElementById('searchForm');
+                    if (searchForm) {
+                        searchForm.dispatchEvent(new Event('submit'));
+                    }
+                }
+            });
+        });
     } else {
         // 显示空状态
         cityList.innerHTML = `
