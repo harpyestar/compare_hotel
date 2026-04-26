@@ -127,6 +127,10 @@ const dbPath = path.join(__dirname, '..', 'data', 'hotel_search.db');
 
 let dbConnected = false;
 let db;
+
+// 搜索结果缓存
+const searchCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5分钟缓存
 const fs = require('fs');
 
 // 保存数据库到文件
@@ -525,21 +529,23 @@ app.get('/api/hot-hotels', async (req, res) => {
         const result = db.exec(`
             SELECT
                 COALESCE(hotel, destination) as name,
+                COALESCE(city, '') as city,
                 COUNT(*) as count
             FROM search_history
             WHERE type = 'hotel' AND (hotel IS NOT NULL OR destination LIKE '%酒店%' OR destination LIKE '%饭店%' OR destination LIKE '%宾馆%')
-            GROUP BY COALESCE(hotel, destination)
+            GROUP BY COALESCE(hotel, destination), COALESCE(city, '')
             ORDER BY count DESC
             LIMIT 10
         `);
 
         let hotels = [];
         if (result.length > 0 && result[0].values.length > 0) {
-            const columns = result[0].columns;
             hotels = result[0].values.map(row => {
-                const obj = {};
-                columns.forEach((col, i) => obj[col] = row[i]);
-                return obj;
+                return {
+                    name: row[0],
+                    city: row[1],
+                    count: row[2]
+                };
             });
         }
 
@@ -651,11 +657,6 @@ app.get('/api/search', async (req, res) => {
             return res.json({ success: false, message: '请提供城市名称' });
         }
         
-        if (!dbConnected) {
-            console.log('数据库未连接');
-            return res.json({ success: false, message: '数据库未连接' });
-        }
-        
         // 对city和hotel参数进行URL解码
         const decodedCity = decodeURIComponent(city);
         const decodedHotel = hotel ? decodeURIComponent(hotel) : '';
@@ -666,123 +667,53 @@ app.get('/api/search', async (req, res) => {
         const limitNum = parseInt(limit);
         console.log('解析后的参数:', { city: decodedCity, hotel: decodedHotel, page: pageNum, limit: limitNum, sort });
         
+        // 生成缓存键
+        const cacheKey = `${decodedCity}_${decodedHotel || ''}_${pageNum}_${limitNum}_${sort}`;
+        console.log('生成缓存键:', cacheKey);
+        
+        // 检查缓存
+        const cachedData = searchCache.get(cacheKey);
+        console.log('检查缓存:', cachedData);
+        if (cachedData && (Date.now() - cachedData.timestamp) < CACHE_TTL) {
+            console.log('使用缓存的搜索结果');
+            return res.json(cachedData.data);
+        }
+        
+        if (!dbConnected) {
+            console.log('数据库未连接');
+            return res.json({ success: false, message: '数据库未连接' });
+        }
+        
         // 计算偏移量
         const offset = (pageNum - 1) * limitNum;
         console.log('计算偏移量:', offset);
         
-        // 直接查询所有符合条件的酒店详细信息和价格，获取所有平台数据
-        console.log('开始查询酒店详细信息...');
-        let hotelDetailsSql = `
-            SELECT h.hotel_id, h.chn_name3 as name, h.city_name, h.chn_address as address, 
-                   p.platform, p.price, p.distance, p.rating
+        // 构建基础查询条件
+        let whereClause = `WHERE h.city_name LIKE '%${decodedCity}%'`;
+        if (decodedHotel) {
+            whereClause += ` AND h.chn_name3 LIKE '%${decodedHotel}%'`;
+        }
+        
+        // 1. 先查询符合条件的酒店总数
+        console.log('开始查询酒店总数...');
+        const countSql = `
+            SELECT COUNT(DISTINCT h.hotel_id) as total
             FROM hotel_info h
             JOIN price_detail p ON h.hotel_id = p.hotel_id
-            WHERE h.city_name LIKE '%${decodedCity}%'
+            ${whereClause}
         `;
         
-        // 如果提供了酒店名称，添加酒店名称过滤
-        if (decodedHotel) {
-            hotelDetailsSql += ` AND h.chn_name3 LIKE '%${decodedHotel}%'`;
-        }
-        
-        console.log('执行酒店详细信息查询:', hotelDetailsSql);
-        
-        // 对于上海月丞民宿，专门查询其所有平台数据
-        if (decodedCity === '上海') {
-            let testSql = `
-                SELECT platform, price 
-                FROM price_detail 
-                WHERE hotel_id = '401084'
-            `;
-            console.log('执行测试查询:', testSql);
-            try {
-                const stmt = db.prepare(testSql);
-                console.log('上海月丞民宿的平台数据:');
-                let hasData = false;
-                while (stmt.step()) {
-                    hasData = true;
-                    const row = stmt.get();
-                    console.log('平台:', row[0], '价格:', row[1]);
-                }
-                if (!hasData) {
-                    console.log('上海月丞民宿没有平台数据');
-                }
-                stmt.free();
-            } catch (error) {
-                console.error('执行测试查询失败:', error);
-            }
-            
-            // 再查询一次，使用LIKE模糊匹配
-            let testSql2 = `
-                SELECT hotel_id, platform, price 
-                FROM price_detail 
-                WHERE hotel_id LIKE '%401084%'
-            `;
-            console.log('执行测试查询2:', testSql2);
-            try {
-                const stmt = db.prepare(testSql2);
-                console.log('上海月丞民宿的平台数据(模糊匹配):');
-                let hasData = false;
-                while (stmt.step()) {
-                    hasData = true;
-                    const row = stmt.get();
-                    console.log('酒店ID:', row[0], '平台:', row[1], '价格:', row[2]);
-                }
-                if (!hasData) {
-                    console.log('上海月丞民宿没有平台数据(模糊匹配)');
-                }
-                stmt.free();
-            } catch (error) {
-                console.error('执行测试查询2失败:', error);
-            }
-        }
-        
-        // 整理数据
-        const hotelsMap = new Map();
-        
+        let totalCount = 0;
         try {
-            // 使用prepare方法执行查询
-            const stmt = db.prepare(hotelDetailsSql);
-            
-            console.log('开始整理数据...');
-            let recordCount = 0;
-            
-            while (stmt.step()) {
-                const row = stmt.get();
-                recordCount++;
-                console.log('处理记录:', row);
-                const [hotel_id, name, city_name, address, platform, price, distance, rating] = row;
-                
-                if (!hotelsMap.has(hotel_id)) {
-                    hotelsMap.set(hotel_id, {
-                        id: hotel_id,
-                        name: name,
-                        address: address,
-                        rating: parseFloat(rating),
-                        distance: distance + '公里',
-                        platforms: []
-                    });
-                    console.log('创建新酒店:', hotel_id, name);
-                }
-                
-                hotelsMap.get(hotel_id).platforms.push({
-                    name: platform,
-                    price: parseFloat(price),
-                    link: '#'
-                });
-                console.log('添加平台:', platform, price);
+            const countStmt = db.prepare(countSql);
+            if (countStmt.step()) {
+                const row = countStmt.get();
+                totalCount = row[0];
             }
-            stmt.free();
-            
-            console.log('有酒店详细信息数据，共', recordCount, '条记录');
+            countStmt.free();
+            console.log('酒店总数查询结果:', totalCount);
         } catch (error) {
-            console.error('执行酒店详细信息查询失败:', error);
-            // 继续执行，返回空数据
-        }
-        
-        if (hotelsMap.size === 0) {
-            console.log('没有酒店详细信息数据');
-            // 直接返回空数据
+            console.error('执行酒店总数查询失败:', error);
             res.json({
                 success: true,
                 data: {
@@ -796,45 +727,98 @@ app.get('/api/search', async (req, res) => {
             return;
         }
         
-        // 获取总记录数
-        console.log('开始获取总记录数...');
-        // 使用与获取酒店数据相同的逻辑计算总记录数
-        let countSql = `
-            SELECT COUNT(DISTINCT h.hotel_id) as count 
-            FROM hotel_info h
-            JOIN price_detail p ON h.hotel_id = p.hotel_id
-            WHERE h.city_name LIKE '%${decodedCity}%'
-        `;
-        
-        // 如果提供了酒店名称，添加酒店名称过滤
-        if (decodedHotel) {
-            countSql += ` AND h.chn_name3 LIKE '%${decodedHotel}%'`;
+        if (totalCount === 0) {
+            console.log('没有酒店详细信息数据');
+            res.json({
+                success: true,
+                data: {
+                    hotels: [],
+                    total: 0,
+                    page: pageNum,
+                    limit: limitNum,
+                    totalPages: 0
+                }
+            });
+            return;
         }
         
-        console.log('执行总记录数查询:', countSql);
+        // 2. 构建主查询，添加LIMIT和OFFSET实现分页
+        console.log('开始查询酒店数据...');
+        let hotelSql = `
+            SELECT h.hotel_id, h.chn_name3 as name, h.city_name, h.chn_address as address, 
+                   p.platform, p.price, p.distance, p.rating
+            FROM hotel_info h
+            JOIN price_detail p ON h.hotel_id = p.hotel_id
+            ${whereClause}
+            GROUP BY h.hotel_id
+            LIMIT ${limitNum} OFFSET ${offset}
+        `;
         
-        let totalCount = 0;
+        console.log('执行酒店数据查询:', hotelSql);
+        
+        // 整理数据
+        const hotelsMap = new Map();
+        
         try {
-            // 使用prepare方法执行查询
-            const stmt = db.prepare(countSql);
+            const stmt = db.prepare(hotelSql);
             
-            if (stmt.step()) {
+            console.log('开始整理数据...');
+            let recordCount = 0;
+            
+            while (stmt.step()) {
                 const row = stmt.get();
-                console.log('总记录数查询结果:', row);
-                totalCount = row[0];
+                recordCount++;
+                const [hotel_id, name, city_name, address, platform, price, distance, rating] = row;
+                
+                if (!hotelsMap.has(hotel_id)) {
+                    hotelsMap.set(hotel_id, {
+                        id: hotel_id,
+                        name: name,
+                        address: address,
+                        rating: parseFloat(rating),
+                        distance: distance + '公里',
+                        platforms: []
+                    });
+                }
+                
+                hotelsMap.get(hotel_id).platforms.push({
+                    name: platform,
+                    price: parseFloat(price),
+                    link: '#'
+                });
             }
             stmt.free();
             
-            console.log('总记录数查询执行完成');
+            console.log('有酒店详细信息数据，共', recordCount, '条记录');
         } catch (error) {
-            console.error('执行总记录数查询失败:', error);
-            // 继续执行，使用默认值0
+            console.error('执行酒店数据查询失败:', error);
+            res.json({
+                success: true,
+                data: {
+                    hotels: [],
+                    total: 0,
+                    page: pageNum,
+                    limit: limitNum,
+                    totalPages: 0
+                }
+            });
+            return;
         }
         
-        // 实际获取的酒店数量
-        const actualHotelCount = hotelsMap.size;
-        console.log('实际酒店数量:', actualHotelCount);
-        console.log('总记录数:', totalCount);
+        if (hotelsMap.size === 0) {
+            console.log('没有酒店详细信息数据');
+            res.json({
+                success: true,
+                data: {
+                    hotels: [],
+                    total: 0,
+                    page: pageNum,
+                    limit: limitNum,
+                    totalPages: 0
+                }
+            });
+            return;
+        }
         
         // 转换为数组并排序
         let hotels = Array.from(hotelsMap.values());
@@ -890,32 +874,33 @@ app.get('/api/search', async (req, res) => {
                 });
         }
         
-        // 分页
-        hotels = hotels.slice(offset, offset + limitNum);
-        
         console.log('整理完成，共', hotels.length, '家酒店');
-        console.log('第一家酒店:', hotels[0]);
-        if (hotels[0]) {
-            console.log('第一家酒店的platforms:', hotels[0].platforms);
-        }
         
-        // 使用实际获取的酒店数量作为总记录数，确保分页显示正常
-        const finalTotalCount = actualHotelCount;
-        const finalTotalPages = Math.ceil(finalTotalCount / limitNum);
+        const finalTotalPages = Math.ceil(totalCount / limitNum);
         
-        console.log('最终总记录数:', finalTotalCount);
+        console.log('最终总记录数:', totalCount);
         console.log('最终总页数:', finalTotalPages);
         
-        res.json({
+        const responseData = {
             success: true,
             data: {
                 hotels: hotels,
-                total: finalTotalCount,
+                total: totalCount,
                 page: pageNum,
                 limit: limitNum,
                 totalPages: finalTotalPages
             }
+        };
+        
+        // 缓存搜索结果
+        searchCache.set(cacheKey, {
+            data: responseData,
+            timestamp: Date.now()
         });
+        
+        console.log('缓存搜索结果');
+        
+        res.json(responseData);
         console.log('响应成功');
     } catch (error) {
         console.error('搜索酒店失败:', error);
