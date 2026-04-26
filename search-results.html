@@ -352,10 +352,20 @@
                 // 验证数据结构
                 if (data && data.success && data.data) {
                     // 提取数据
-                    const total = data.data.total || 0;
-                    const hotels = data.data.hotels || [];
+                    let total = data.data.total || 0;
+                    let hotels = data.data.hotels || [];
                     const returnedPage = data.data.page || page;
-                    const totalPages = data.data.totalPages || Math.ceil(total / 10);
+                    
+                    // 如果指定了酒店名称，过滤酒店数据
+                    if (hotel) {
+                        const filteredHotels = hotels.filter(hotelItem => 
+                            hotelItem.name.toLowerCase().includes(hotel.toLowerCase())
+                        );
+                        hotels = filteredHotels;
+                        total = filteredHotels.length;
+                    }
+                    
+                    const totalPages = Math.ceil(total / 10);
                     
                     console.log('处理后的数据 - 总数:', total, '酒店数:', hotels.length, '当前页:', returnedPage, '总页数:', totalPages);
                     

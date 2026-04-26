@@ -644,7 +644,7 @@ app.get('/', (req, res) => {
 app.get('/api/search', async (req, res) => {
     try {
         console.log('接收到搜索请求:', req.query);
-        const { city, page = 1, limit = 10, sort = 'default' } = req.query;
+        const { city, hotel, page = 1, limit = 10, sort = 'default' } = req.query;
         
         if (!city) {
             console.log('缺少城市参数');
@@ -656,54 +656,32 @@ app.get('/api/search', async (req, res) => {
             return res.json({ success: false, message: '数据库未连接' });
         }
         
-        // 对city参数进行URL解码
+        // 对city和hotel参数进行URL解码
         const decodedCity = decodeURIComponent(city);
-        console.log('解码后的城市名称:', decodedCity);
+        const decodedHotel = hotel ? decodeURIComponent(hotel) : '';
+        console.log('解码后的参数:', { city: decodedCity, hotel: decodedHotel });
         
         // 确保参数类型正确
         const pageNum = parseInt(page);
         const limitNum = parseInt(limit);
-        console.log('解析后的参数:', { city: decodedCity, page: pageNum, limit: limitNum, sort });
+        console.log('解析后的参数:', { city: decodedCity, hotel: decodedHotel, page: pageNum, limit: limitNum, sort });
         
         // 计算偏移量
         const offset = (pageNum - 1) * limitNum;
         console.log('计算偏移量:', offset);
         
-        // 首先获取符合条件的酒店ID列表，按指定排序，并进行分页
-        // 使用简单的查询方式，避免复杂的子查询
+        // 首先从hotel_info表获取符合条件的酒店ID列表
         let hotelIdsSql = `
-            SELECT DISTINCT h.hotel_id
-            FROM hotel_info h
-            JOIN price_detail p ON h.hotel_id = p.hotel_id
-            WHERE h.city_name LIKE '%${decodedCity}%'
+            SELECT DISTINCT hotel_id
+            FROM hotel_info
+            WHERE city_name LIKE '%${decodedCity}%'
         `;
         
-        // 添加排序
-        switch (sort) {
-            case 'price_asc':
-                hotelIdsSql += ' ORDER BY p.price ASC';
-                break;
-            case 'price_desc':
-                hotelIdsSql += ' ORDER BY p.price DESC';
-                break;
-            case 'rating_asc':
-                hotelIdsSql += ' ORDER BY p.rating ASC';
-                break;
-            case 'rating_desc':
-                hotelIdsSql += ' ORDER BY p.rating DESC';
-                break;
-            case 'distance_asc':
-                hotelIdsSql += ' ORDER BY p.distance ASC';
-                break;
-            case 'distance_desc':
-                hotelIdsSql += ' ORDER BY p.distance DESC';
-                break;
-            default:
-                hotelIdsSql += ' ORDER BY p.price ASC';
+        // 如果提供了酒店名称，添加酒店名称过滤
+        if (decodedHotel) {
+            hotelIdsSql += ` AND chn_name3 LIKE '%${decodedHotel}%'`;
         }
         
-        // 添加分页
-        hotelIdsSql += ` LIMIT ${limitNum} OFFSET ${offset}`;
         console.log('执行酒店ID查询:', hotelIdsSql);
         
         try {
@@ -743,7 +721,13 @@ app.get('/api/search', async (req, res) => {
             try {
                 // 获取总记录数
                 console.log('开始获取总记录数...');
-                const countSql = `SELECT COUNT(DISTINCT hotel_id) as count FROM hotel_info WHERE city_name LIKE '%${decodedCity}%'`;
+                let countSql = `SELECT COUNT(DISTINCT hotel_id) as count FROM hotel_info WHERE city_name LIKE '%${decodedCity}%'`;
+                
+                // 如果提供了酒店名称，添加酒店名称过滤
+                if (decodedHotel) {
+                    countSql += ` AND chn_name3 LIKE '%${decodedHotel}%'`;
+                }
+                
                 console.log('执行总记录数查询:', countSql);
                 
                 let totalCount = 0;
@@ -766,15 +750,42 @@ app.get('/api/search', async (req, res) => {
                 
                 console.log('总记录数:', totalCount);
                 
-                // 根据酒店ID查询详细信息和价格
+                // 根据酒店ID查询详细信息和价格，带排序和分页
                 console.log('开始查询酒店详细信息...');
-                const hotelDetailsSql = `
+                let hotelDetailsSql = `
                     SELECT h.hotel_id, h.chn_name3 as name, h.city_name, h.chn_address as address, 
                            p.platform, p.price, p.distance, p.rating
                     FROM hotel_info h
                     JOIN price_detail p ON h.hotel_id = p.hotel_id
                     WHERE h.hotel_id IN (${hotelIds.join(',')})
                 `;
+                
+                // 添加排序
+                switch (sort) {
+                    case 'price_asc':
+                        hotelDetailsSql += ' ORDER BY p.price ASC';
+                        break;
+                    case 'price_desc':
+                        hotelDetailsSql += ' ORDER BY p.price DESC';
+                        break;
+                    case 'rating_asc':
+                        hotelDetailsSql += ' ORDER BY p.rating ASC';
+                        break;
+                    case 'rating_desc':
+                        hotelDetailsSql += ' ORDER BY p.rating DESC';
+                        break;
+                    case 'distance_asc':
+                        hotelDetailsSql += ' ORDER BY p.distance ASC';
+                        break;
+                    case 'distance_desc':
+                        hotelDetailsSql += ' ORDER BY p.distance DESC';
+                        break;
+                    default:
+                        hotelDetailsSql += ' ORDER BY p.price ASC';
+                }
+                
+                // 添加分页
+                hotelDetailsSql += ` LIMIT ${limitNum} OFFSET ${offset}`;
                 console.log('执行酒店详细信息查询:', hotelDetailsSql);
                 
                 // 整理数据
