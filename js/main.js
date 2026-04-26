@@ -52,49 +52,49 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('footer').innerHTML = footerHtml;
         
         // 组件加载完成后初始化所有模块
+        // 移除不必要的延迟，直接初始化所有模块
+        // 初始化搜索功能
+        searchModule.init();
+        
+        // 初始化日期选择功能
+        datepickerModule.init();
+        
+        // 初始化人数与客房数选择功能
+        guestsModule.init();
+        
+        // 初始化用户认证功能
+        userModule.init();
+        
+        // 初始化收藏功能
+        favoritesModule.init();
+        
+        // 初始化向导功能
+        guideModule.init();
+        
+        // 初始化比较酒店功能
+        initCompareHotels();
+        
+        // 初始化语言切换功能
+        initLanguageSwitch();
+        
+        // 初始化搜索选项切换功能
+        initSearchOptions();
+        
+        // 初始化搜索表单提交
+        initSearchForm();
+        
+        // 初始更新页面文本
+        updatePageText();
+        // 初始更新人数与客房数显示文本
+        guestsModule.updateDisplayText();
+        // 初始更新日期选择显示文本
+        datepickerModule.updateDisplayText();
+        
+        // 异步加载热门搜索数据，不阻塞页面渲染
         setTimeout(() => {
-            // 初始化搜索功能
-            searchModule.init();
-            
-            // 初始化日期选择功能
-            datepickerModule.init();
-            
-            // 初始化人数与客房数选择功能
-            guestsModule.init();
-            
-            // 初始化用户认证功能
-            userModule.init();
-            
-            // 初始化收藏功能
-            favoritesModule.init();
-            
-            // 初始化向导功能
-            guideModule.init();
-            
-            // 初始化比较酒店功能
-            initCompareHotels();
-            
-            // 初始化语言切换功能
-            initLanguageSwitch();
-            
-            // 初始化查看详情功能
-            initViewDetails();
-            
-            // 初始化搜索选项切换功能
-            initSearchOptions();
-            
-            // 初始化搜索表单提交
-            initSearchForm();
-            
-            // 初始化热门搜索数据
             initHotSearches();
-            
-            // 初始更新页面文本
-            updatePageText();
-            // 初始更新人数与客房数显示文本
-            guestsModule.updateDisplayText();
-            // 初始更新日期选择显示文本
-            datepickerModule.updateDisplayText();
+            // 初始化查看详情功能（热门搜索数据加载后）
+            initViewDetails();
         }, 100);
     });
 });
@@ -151,22 +151,42 @@ function initViewDetails() {
     // 为每个查看详情按钮添加点击事件
     viewDetailsBtns.forEach(btn => {
         btn.addEventListener('click', function() {
-            // 获取酒店卡片
-            const hotelCard = this.closest('.hotel-card');
-            if (!hotelCard) return;
-            
             // 获取酒店信息
-            const hotelName = hotelCard.querySelector('.hotel-name').textContent;
-            const hotelAddress = hotelCard.querySelector('.hotel-address').textContent;
-            const hotelPrice = hotelCard.querySelector('.hotel-price').textContent.replace(/[^0-9]/g, '');
-            const hotelImage = hotelCard.querySelector('.hotel-image img').src;
-            const hotelId = hotelCard.querySelector('.favorite-btn').getAttribute('data-hotel-id');
+            const city = this.getAttribute('data-city') || '';
+            const hotel = this.getAttribute('data-hotel') || '';
             
-            // 构建详情页URL
-            const detailUrl = `hotel-detail.html?id=${hotelId}&name=${encodeURIComponent(hotelName)}&address=${encodeURIComponent(hotelAddress)}&price=${hotelPrice}&image=${encodeURIComponent(hotelImage)}`;
+            // 设置日期为今天和明天
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
             
-            // 在新标签页中打开详情页
-            window.open(detailUrl, '_blank');
+            const formatDate = (date) => {
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            };
+            
+            const checkIn = formatDate(today);
+            const checkOut = formatDate(tomorrow);
+            
+            // 设置默认人数
+            const guests = '2人 · 1间房';
+            
+            // 构建搜索结果页面URL
+            const searchParams = new URLSearchParams();
+            searchParams.append('city', city);
+            if (hotel) {
+                searchParams.append('hotel', hotel);
+            }
+            searchParams.append('checkIn', checkIn);
+            searchParams.append('checkOut', checkOut);
+            searchParams.append('guests', guests);
+            
+            const searchUrl = `search-results.html?${searchParams.toString()}`;
+            
+            // 在当前页面跳转到搜索结果
+            window.location.href = searchUrl;
         });
     });
 }
@@ -336,9 +356,16 @@ function initSearchForm() {
 // 初始化热门搜索数据
 async function initHotSearches() {
     try {
-        // 获取热门城市搜索
+        // 串行获取数据，避免同时发送多个请求
+        // 先获取热门城市搜索
         const citiesResponse = await fetch('/api/hot-cities');
         const citiesData = await citiesResponse.json();
+        
+        // 更新城市列表
+        updateCityList(citiesData.success ? citiesData.cities : []);
+        
+        // 延迟100ms后获取热门酒店搜索
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         // 获取热门酒店搜索
         const hotelsResponse = await fetch('/api/hot-hotels');
@@ -346,9 +373,6 @@ async function initHotSearches() {
         
         // 更新热门酒店列表
         updateHotelList(hotelsData.success ? hotelsData.hotels : []);
-        
-        // 更新城市列表
-        updateCityList(citiesData.success ? citiesData.cities : []);
         
     } catch (error) {
         console.error('获取热门搜索数据失败:', error);
@@ -389,9 +413,9 @@ function updateHotelList(hotels) {
                                     <i class="far fa-heart"></i>
                                 </button>
                             </div>
-                            <p class="hotel-address">搜索次数: ${hotel.count}</p>
+                            <p class="hotel-address">${hotel.city || ''} | 搜索次数: ${hotel.count}</p>
                             <div class="hotel-price">热门指数: ${hotel.count}</div>
-                            <button class="btn btn-sm btn-outline-primary view-details-btn">查看详情</button>
+                            <button class="btn btn-sm btn-outline-primary view-details-btn" data-city="${hotel.city || ''}" data-hotel="${hotel.name}">查看详情</button>
                         </div>
                     </div>
                 </div>
