@@ -143,14 +143,14 @@ function initCompareHotels() {
 }
 
 // 查看详情功能
-function initViewDetails() {
+async function initViewDetails() {
     const viewDetailsBtns = document.querySelectorAll('.view-details-btn');
     
     if (!viewDetailsBtns.length) return;
     
     // 为每个查看详情按钮添加点击事件
     viewDetailsBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', async function() {
             // 获取酒店信息
             const city = this.getAttribute('data-city') || '';
             const hotel = this.getAttribute('data-hotel') || '';
@@ -169,6 +169,31 @@ function initViewDetails() {
             
             const checkIn = formatDate(today);
             const checkOut = formatDate(tomorrow);
+            
+            // 保存搜索历史
+            const searchType = hotel ? 'hotel' : 'city';
+            const destination = hotel ? `${city} ${hotel}` : city;
+            
+            try {
+                const sessionId = localStorage.getItem('sessionId');
+                const response = await fetch('/api/history', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': sessionId
+                    },
+                    body: JSON.stringify({ destination, checkIn, checkOut, type: searchType, city, hotel })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    console.log('Search history saved successfully');
+                } else {
+                    console.log('Save history failed:', result.message);
+                }
+            } catch (error) {
+                console.error('保存搜索历史失败:', error);
+            }
             
             // 设置默认人数
             const guests = '2人 · 1间房';

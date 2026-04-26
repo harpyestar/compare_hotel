@@ -269,9 +269,9 @@
                     // 更新搜索结果统计
                     document.getElementById('resultCount').textContent = `我们在 ${city} 找到 X 家酒店`;
                     
-                    // 执行搜索
+                    // 执行搜索，但不保存搜索历史（因为首页已经保存过了）
                     setTimeout(() => {
-                        searchHotels(city, hotel, checkIn, checkOut, guests);
+                        searchHotels(city, hotel, checkIn, checkOut, guests, 1, 'default', false);
                     }, 500);
                 }
             }, 200);
@@ -316,10 +316,37 @@
         }
         
         // 搜索酒店
-        async function searchHotels(city, hotel, checkIn, checkOut, guests, page = 1, sort = 'default') {
+        async function searchHotels(city, hotel, checkIn, checkOut, guests, page = 1, sort = 'default', saveHistory = true) {
             // 解码city参数，防止多重编码
             const decodedCity = decodeURIComponent(city);
             console.log('开始搜索酒店:', decodedCity, page, sort);
+            
+            // 保存搜索历史（仅当saveHistory为true时）
+            if (saveHistory) {
+                const searchType = hotel ? 'hotel' : 'city';
+                const destination = hotel ? `${decodedCity} ${hotel}` : decodedCity;
+                
+                try {
+                    const sessionId = localStorage.getItem('sessionId');
+                    const response = await fetch('/api/history', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': sessionId
+                        },
+                        body: JSON.stringify({ destination, checkIn, checkOut, type: searchType, city: decodedCity, hotel })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('Search history saved successfully');
+                    } else {
+                        console.log('Save history failed:', result.message);
+                    }
+                } catch (error) {
+                    console.error('保存搜索历史失败:', error);
+                }
+            }
             
             // 显示加载状态
             document.getElementById('resultsContainer').innerHTML = `
@@ -741,7 +768,7 @@
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const page = parseInt(this.getAttribute('data-page'));
-                    searchHotels(city, hotel, checkIn, checkOut, guests, page, sort);
+                    searchHotels(city, hotel, checkIn, checkOut, guests, page, sort, false);
                 });
             });
         }
@@ -821,7 +848,7 @@
                     
                     // 重新搜索
                     if (city) {
-                        searchHotels(city, hotel, checkIn, checkOut, guests, 1, sort);
+                        searchHotels(city, hotel, checkIn, checkOut, guests, 1, sort, false);
                     }
                 });
             });
